@@ -122,40 +122,63 @@ exports.optimizeCart = async (req, res) => {
       });
     }
 
-    let result = {};
-    let totalCost = 0;
+    const names = products.map(p => p.toLowerCase());
 
-    for (let item of products) {
-      const name = item.toLowerCase();
+    // 🔥 Get all relevant products in ONE query
+    const allItems = await Product.find({
+      name: { $in: names }
+    });
 
-      const entries = await Product.find({ name });
+    if (allItems.length === 0) {
+      return res.status(404).json({
+        error: "No products found",
+      });
+    }
 
-      if (entries.length === 0) {
-        result[name] = "Not found";
-        continue;
+    // 🧠 Group by platform
+    let platformMap = {};
+
+    allItems.forEach(item => {
+      if (!platformMap[item.platform]) {
+        platformMap[item.platform] = {};
       }
 
-      let cheapest = null;
-      let lowest = Infinity;
+      platformMap[item.platform][item.name] = item.price;
+    });
 
-      entries.forEach((p) => {
-        if (p.price < lowest) {
-          lowest = p.price;
-          cheapest = p.platform;
+    let bestPlatform = null;
+    let lowestTotal = Infinity;
+
+    // 🧮 Calculate total per platform
+    for (let platform in platformMap) {
+      let total = 0;
+      let valid = true;
+
+      for (let name of names) {
+        if (!platformMap[platform][name]) {
+          valid = false;
+          break;
         }
+        total += platformMap[platform][name];
+      }
+
+      if (valid && total < lowestTotal) {
+        lowestTotal = total;
+        bestPlatform = platform;
+      }
+    }
+
+    // ⚡ fallback (if no single platform has all)
+    if (!bestPlatform) {
+      return res.json({
+        message: "No single platform has all items",
       });
-
-      result[name] = {
-        platform: cheapest,
-        price: lowest,
-      };
-
-      totalCost += lowest;
     }
 
     res.json({
-      cart: result,
-      totalCost,
+      bestPlatform,
+      totalCost: lowestTotal,
+      note: "All items from one platform ✅",
     });
 
   } catch (err) {

@@ -2,6 +2,10 @@ const Product = require("../model/productModel");
 const cache = {} ; 
 const CACHE_TTL = 60*1000;
 
+
+
+// can imporve You’ll eventually need centralized cache helper 
+
 exports.addProduct = async (req, res) => {
   try {
     const { name, price, platform } = req.body;
@@ -21,10 +25,10 @@ exports.addProduct = async (req, res) => {
     }
 
     const normalizedName = name.toLowerCase(); // normalize the name to lowercase
-
+const normalizedPlatform = platform.toLowerCase() ; 
     const existing = await Product.findOne({
       name: normalizedName,
-      platform,
+      platform : normalizedPlatform,
     });
    
     if (existing) {
@@ -64,13 +68,7 @@ exports.addProduct = async (req, res) => {
   }
 };
 
-// can improve 
-/*
-Add stronger validation:
-price should be number and >= 0
-platform should be from allowed values (amazon/flipkart/etc.)
-Cache invalidation only by name is okay for compare endpoint, but if more cache keys grow later, use a cache helper
-*/
+
 
 exports.compareProduct = async (req, res) => {
   try {
@@ -93,7 +91,12 @@ if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
 
 // DB query
 const items = await Product.find({ name: productName });
-console.log("DB items:", items);
+if (items.length === 0) {
+  return res.status(404).json({
+    error: "Product not found"
+  });
+}
+// console.log("DB items:", items);
 let prices = {};
 let cheapest = null;
 let lowest = Infinity;
@@ -172,7 +175,6 @@ exports.optimizeCart = async (req, res) => {
     }
 // 🧠 Group by name (for split-cart optimization)
 const groupedByName = {};
-
 allItems.forEach(p => {
   if (!groupedByName[p.name]) {
     groupedByName[p.name] = [];
@@ -181,11 +183,19 @@ allItems.forEach(p => {
 });
 
 // 🔥 Split-cart (cheapest per item)
+
 const splitResult = {};
 let splitTotal = 0;
 
 for (let name of names) {
   const items = groupedByName[name] || [];
+  if (items.length === 0) {
+    splitResult[name] = {
+     
+      status: "not found"
+    };
+    continue;
+  }
 
   let cheapest = null;
   let lowest = Infinity;
@@ -202,7 +212,9 @@ for (let name of names) {
     price: lowest,
   };
 
-  splitTotal += lowest;
+  if (lowest !== Infinity) {
+    splitTotal += lowest;
+  }
 }
 
 // 🧠 Group by platform (for single-platform optimization)
@@ -236,11 +248,13 @@ for (let platform in platformMap) {
     bestPlatform = platform;
   }
 }
-
+const missing = names.filter(name => !groupedByName[name])
 // ✅ Final response
 res.json({
+  missing, 
   singlePlatform: bestPlatform
-    ? {
+    ? { 
+     
         platform: bestPlatform,
         totalCost: lowestTotal,
       }

@@ -48,4 +48,4 @@ const fs = require("fs");
  }
 
  fs.writeFileSync("dummyData.json" , JSON.stringify(data, null, 2)) ;
- console.log("✅ Dummy data generated");
+ console.log(" Dummy data generated");

@@ -73,11 +73,12 @@ Smart Cart
       {/* INPUT */}
       <div className="m-10">
         <input
+        className="bg-amber-50/90  text-gray-900 mr-2 px-4 py-4 h-10 w-60 mb-1.5 rounded-md "
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Enter product (milk, rice...)"
         />
-        <button onClick={addItem}>Add</button>
+        <button className="bg-indigo-600  px-3 py-3 rounded-md text-blue-50" onClick={addItem}>Add</button>
       </div>
 
       {/* ERROR */}
@@ -153,3 +154,12 @@ Smart Cart
     </div>
   );
 }
+
+
+// import HomePage from "./page/Home";
+
+// function App() {
+//   return <HomePage />;
+// }
+
+// export default App;

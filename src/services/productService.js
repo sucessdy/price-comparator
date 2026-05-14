@@ -1,6 +1,5 @@
 const Product = require("../model/productModel");
 
-// 🟢 Add / Update Product
 exports.addOrUpdateProduct = async ({ name, price, platform }) => {
   const normalizedName = name.trim().toLowerCase();
   const normalizedPlatform = platform.trim().toLowerCase();
@@ -9,32 +8,52 @@ exports.addOrUpdateProduct = async ({ name, price, platform }) => {
     name: normalizedName,
     platform: normalizedPlatform,
   });
+// we use atomic operation 
 
   if (existing) {
-    existing.priceHistory.push({ price: existing.price });
-    existing.price = price;
-    await existing.save();
+    const update = await Product.findOneAndUpdate(
+      {
+        name: normalizedName,
+        platform: normalizedPlatform,
+      },
+      {
+        $set: { price: price },
+        $push: { priceHistory: { price: existing.price, date: new Date() } },
+      },
+    );
+    return {type : "update" , product : update} ; 
+  
 
-    return {
-      type: "updated",
-      product: existing,
-    };
+    // return {
+    //   type: "updated",
+    //   product: existing,
+    // };
   }
 
-  const newProduct = new Product({
+  const newProduct = await Product.create({
     name: normalizedName,
     price,
     platform: normalizedPlatform,
     priceHistory: [],
   });
 
-  await newProduct.save();
-
-  return {
-    type: "created",
-    product: newProduct,
-  };
+  return { type: "created", product: newProduct };
 };
+
+  // const newProduct = new Product({
+  //   name: normalizedName,
+  //   price,
+  //   platform: normalizedPlatform,
+  //   priceHistory: [],
+  // });
+
+  // await newProduct.save();
+
+  // return {
+  //   type: "created",
+  //   product: newProduct,
+  // };
+// };
 
 // 🟢 Compare Product
 exports.compareProduct = async (productName) => {
@@ -154,15 +173,12 @@ exports.compareProduct = async (productName) => {
 // };
 
 exports.optimizeCart = async (products) => {
-
   // 1️⃣ Normalize input
-  const names = products.map(
-    (p) => p.trim().toLowerCase()
-  );
+  const names = products.map((p) => p.trim().toLowerCase());
 
   // 2️⃣ Fetch all matching products
   const allItems = await Product.find({
-    name: { $in: names }
+    name: { $in: names },
   });
 
   // 3️⃣ No products found
@@ -174,7 +190,6 @@ exports.optimizeCart = async (products) => {
   const platformMap = {};
 
   allItems.forEach((item) => {
-
     if (!platformMap[item.platform]) {
       platformMap[item.platform] = {
         totalCost: 0,
@@ -182,24 +197,18 @@ exports.optimizeCart = async (products) => {
       };
     }
 
-    platformMap[item.platform]
-      .products[item.name] = item.price;
-
+    platformMap[item.platform].products[item.name] = item.price;
   });
 
   // 5️⃣ Calculate totals
   const platformComparison = [];
 
   for (let platform in platformMap) {
-
     let valid = true;
     let total = 0;
 
     for (let name of names) {
-
-      const price =
-        platformMap[platform]
-          .products[name];
+      const price = platformMap[platform].products[name];
 
       if (price == null) {
         valid = false;
@@ -211,21 +220,17 @@ exports.optimizeCart = async (products) => {
 
     // only complete carts
     if (valid) {
-
-      platformMap[platform]
-        .totalCost = total;
+      platformMap[platform].totalCost = total;
 
       platformComparison.push({
         platform,
         totalCost: total,
       });
-
     }
   }
 
   // 6️⃣ No complete platform
   if (platformComparison.length === 0) {
-
     return {
       recommended: null,
 
@@ -241,9 +246,7 @@ exports.optimizeCart = async (products) => {
   }
 
   // 7️⃣ Sort cheapest first
-  platformComparison.sort(
-    (a, b) => a.totalCost - b.totalCost
-  );
+  platformComparison.sort((a, b) => a.totalCost - b.totalCost);
 
   // 8️⃣ Best platform
   const best = platformComparison[0];
@@ -256,25 +259,16 @@ exports.optimizeCart = async (products) => {
 
     totalCost: best.totalCost,
 
-    reason: [
-      "All products available",
-      "Lowest total cost",
-      "Single checkout",
-    ],
+    reason: ["All products available", "Lowest total cost", "Single checkout"],
   };
 
   // 🔟 Missing products
-  const foundProducts = new Set(
-    allItems.map((p) => p.name)
-  );
+  const foundProducts = new Set(allItems.map((p) => p.name));
 
-  const missing = names.filter(
-    (name) => !foundProducts.has(name)
-  );
+  const missing = names.filter((name) => !foundProducts.has(name));
 
   // 1️⃣1️⃣ Final response
   return {
-
     recommended,
 
     platformComparison,

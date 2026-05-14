@@ -5,10 +5,11 @@ exports.addProduct = async (req, res) => {
   try {
     const { name, price, platform } = req.body;
 
-    if (!name || price == null || !platform) {
+    
+    if (!name || typeof name !== "string" ||  name.trim().length < 2){ 
       return res.status(400).json({
-        error: "Invalid input",
-      });
+        error : "Invalid"
+      })
     }
 
     const result = await productService.addOrUpdateProduct({
@@ -43,6 +44,8 @@ exports.compareProduct = async (req, res) => {
 };
 
 //    Optimise Cart
+
+
 exports.optimizeCart = async (req, res) => {
   try {
     const { products } = req.body;

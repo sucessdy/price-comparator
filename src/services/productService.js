@@ -1,6 +1,22 @@
-const Product = require("../model/productModel");
+const Product = require("../models/productModel");
 
+const Joi = require("joi");
+const productSchema =
+  Joi.object *
+  {
+    name: Joi.string().required().min(2).max(100),
+    price: Joi.number().required().min(0).max(10000000),
+    product: Joi.string().required(),
+    // valid("")
+  };
 exports.addOrUpdateProduct = async ({ name, price, platform }) => {
+  const { error } = productSchema.validate({
+    name,
+    price,
+    product,
+  });
+  if (error) throw new Error(`Validate Input :  ${error.message}`);
+
   const normalizedName = name.trim().toLowerCase();
   const normalizedPlatform = platform.trim().toLowerCase();
 
@@ -8,7 +24,7 @@ exports.addOrUpdateProduct = async ({ name, price, platform }) => {
     name: normalizedName,
     platform: normalizedPlatform,
   });
-// we use atomic operation 
+  // we use atomic operation
 
   if (existing) {
     const update = await Product.findOneAndUpdate(
@@ -21,13 +37,7 @@ exports.addOrUpdateProduct = async ({ name, price, platform }) => {
         $push: { priceHistory: { price: existing.price, date: new Date() } },
       },
     );
-    return {type : "update" , product : update} ; 
-  
-
-    // return {
-    //   type: "updated",
-    //   product: existing,
-    // };
+    return { type: "update", product: update };
   }
 
   const newProduct = await Product.create({
@@ -39,21 +49,6 @@ exports.addOrUpdateProduct = async ({ name, price, platform }) => {
 
   return { type: "created", product: newProduct };
 };
-
-  // const newProduct = new Product({
-  //   name: normalizedName,
-  //   price,
-  //   platform: normalizedPlatform,
-  //   priceHistory: [],
-  // });
-
-  // await newProduct.save();
-
-  // return {
-  //   type: "created",
-  //   product: newProduct,
-  // };
-// };
 
 // 🟢 Compare Product
 exports.compareProduct = async (productName) => {
@@ -85,108 +80,22 @@ exports.compareProduct = async (productName) => {
   };
 };
 
-// 🟢 Optimize Cart
-// exports.optimizeCart = async (products) => {
-//   const names = products.map((p) => p.trim().toLowerCase());
-
-//   const allItems = await Product.find({
-//     name: { $in: names },
-//   });
-
-//   if (allItems.length === 0) {
-//     throw new Error("No products found");
-//   }
-
-//   // Group by name
-//   const groupedByName = {};
-//   allItems.forEach((p) => {
-//     if (!groupedByName[p.name]) {
-//       groupedByName[p.name] = [];
-//     }
-//     groupedByName[p.name].push(p);
-//   });
-
-//   // Split-cart (cheapest per item)
-//   let splitResult = {};
-//   let splitTotal = 0;
-
-//   names.forEach((name) => {
-//     const items = groupedByName[name] || [];
-
-//     if (items.length === 0) {
-//       splitResult[name] = { status: "not found" };
-//       return;
-//     }
-
-//     const cheapest = items.reduce((min, curr) =>
-//       curr.price < min.price ? curr : min
-//     );
-
-//     splitResult[name] = {
-//       platform: cheapest.platform,
-//       price: cheapest.price,
-//     };
-
-//     splitTotal += cheapest.price;
-//   });
-
-//   // Group by platform
-//   const platformMap = {};
-//   allItems.forEach((item) => {
-//     if (!platformMap[item.platform]) {
-//       platformMap[item.platform] = {};
-//     }
-//     platformMap[item.platform][item.name] = item.price;
-//   });
-
-//   // Single platform
-//   let bestPlatform = null;
-//   let lowestTotal = Infinity;
-
-//   for (let platform in platformMap) {
-//     let total = 0;
-//     let valid = true;
-
-//     for (let name of names) {
-//       if (platformMap[platform][name] == null) {
-//         valid = false;
-//         break;
-//       }
-//       total += platformMap[platform][name];
-//     }
-
-//     if (valid && total < lowestTotal) {
-//       lowestTotal = total;
-//       bestPlatform = platform;
-//     }
-//   }
-
-//   return {
-//     singlePlatform: bestPlatform
-//       ? { platform: bestPlatform, totalCost: lowestTotal }
-//       : null,
-//     splitCart: {
-//       items: splitResult,
-//       totalCost: splitTotal,
-//     },
-//   };
-// };
 
 exports.optimizeCart = async (products) => {
-  // 1️⃣ Normalize input
+ 
   const names = products.map((p) => p.trim().toLowerCase());
 
-  // 2️⃣ Fetch all matching products
+  
   const allItems = await Product.find({
     name: { $in: names },
   });
 
-  // 3️⃣ No products found
+
   if (allItems.length === 0) {
     throw new Error("No matching products found");
   }
 
-  // 4️⃣ Group by platform
+  
   const platformMap = {};
 
   allItems.forEach((item) => {

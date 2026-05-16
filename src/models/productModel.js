@@ -4,9 +4,9 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-  
+
       lowercase: true,
-      trim: true, 
+      trim: true,
     },
     price: {
       type: Number,
@@ -16,11 +16,16 @@ const productSchema = new mongoose.Schema(
     platform: {
       type: String,
       required: true,
+      trim: true,
       lowercase: true,
     },
     priceHistory: [
       {
-        price: Number,
+        price: {
+          type: Number,
+          require: true,
+          min: 0,
+        },
         date: {
           type: Date,
           default: Date.now,
@@ -31,9 +36,7 @@ const productSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const productModel = mongoose.model(
-  "Product",
-  productSchema.index({ name: 1, platform: 1 }, { unique: true }),
-);
+productSchema.index({ name: 1, platform: 1 }, { unique: 1 });
+const productModel = mongoose.model("Product", productSchema);
 
 module.exports = productModel;

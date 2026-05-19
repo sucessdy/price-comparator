@@ -1,13 +1,24 @@
 
-const express = require("express")
-const cors = require("cors")
-const errorHandler= require("./utils/errorHandling")
-const app = express() ; 
-app.use(express.json() )
-app.use(cors())
- 
-const ProductRoutes = require("./routes/productRoutes")
 
-app.use("/", ProductRoutes) ; 
-app.use(errorHandler)
-module.exports = app 
+
+const express = require("express");
+const cors = require("cors");
+const { v4: uuidv4 } = require("uuid"); 
+const errorMiddleware = require("../src/middleware/error.middleware");
+
+const app = express();
+
+app.use((req, res, next) => {
+  req.id = uuidv4();
+  res.setHeader('X-Request-Id', req.id);
+  next();
+});
+
+app.use(express.json());
+app.use(cors());
+
+const ProductRoutes = require("./routes/productRoutes");
+app.use("/api", ProductRoutes); 
+app.use(errorMiddleware);
+
+module.exports = app;

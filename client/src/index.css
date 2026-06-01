@@ -1,4 +1,4 @@
-@import "tailwindcss"; 
+ @import "tailwindcss";
 
 :root {
   --text: #6b6375;
@@ -52,12 +52,8 @@
   }
 }
 
-body {
-  margin: 0;
-}
-
 #root {
-  width: 1126px;
+  width: 1226px;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
@@ -66,6 +62,10 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+body {
+  margin: 0;
 }
 
 h1,
@@ -97,17 +97,48 @@ p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  h1 {
+    font-size: 2.5rem !important;
+  }
+  
+  .text-6xl {
+    font-size: 2.5rem !important;
+  }
 }

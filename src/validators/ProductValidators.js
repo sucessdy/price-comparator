@@ -24,7 +24,6 @@ const productSchema = Joi.object({
     .required()
     .min(2)
     .max(50)
-   // optional: restrict platforms
 });
 module.exports = {
   productSchema

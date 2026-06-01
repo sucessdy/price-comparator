@@ -81,7 +81,6 @@ exports.addOrUpdateProduct = async ({
 exports.compareProduct = async (
   productName
 ) => {
-
   const normalizedName =
     productName.trim().toLowerCase();
 
@@ -89,6 +88,7 @@ exports.compareProduct = async (
     await Product.find({
       name: normalizedName,
     });
+console.log(products)
 
   if (products.length === 0) {
     throw new NotFoundError("Product");
@@ -329,7 +329,7 @@ exports.optimizeCart = async (
   // ======================================================
 
   const savings =
-    bestPlatform &&
+    bestPlatform &&  
     splitCartAvailable &&
     splitTotalCost <
       lowestPlatformCost
@@ -361,7 +361,7 @@ exports.optimizeCart = async (
         missingProducts.length > 0,
     },
 
-    singlePlatform:
+    singlePlatform: 
       bestPlatform
         ? {
             platform:

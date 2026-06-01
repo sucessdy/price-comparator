@@ -114,3 +114,30 @@ connect middleware + controller
 Purpose:
 
 express app configuration
+
+frontend ar
+
+src/
+
+├── api/
+│   └── productApi.ts
+│
+├── components/
+│   ├── Navbar.tsx
+│   ├── Hero.tsx
+│   ├── SearchBar.tsx
+│   ├── ProductCard.tsx
+│   ├── CartItem.tsx
+│   └── Loading.tsx
+│
+├── pages/
+│   ├── HomePage.tsx
+│   ├── ComparePage.tsx
+│   └── OptimizeCartPage.tsx
+│
+├── types/
+│   └── product.ts
+│
+├── App.tsx
+├── main.tsx
+└── index.css

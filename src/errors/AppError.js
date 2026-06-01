@@ -20,7 +20,7 @@ class ValidationError extends AppError {
      const errorMessage = Array.isArray(message) 
       ? message.map(m => m.message).join(', ')
       : message;
-    super(message, 400, "VALIDATION_ERROR");
+    super(errorMessage, 400, "VALIDATION_ERROR");
   }
 }
 

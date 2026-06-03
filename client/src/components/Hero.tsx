@@ -2,7 +2,7 @@ import { Sparkles } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="text-center pt-20 pb-16 relative overflow-hidden">
+    <section className="text-center pt-16 pb-12 relative overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ] bg-purple-500/20 rounded-full blur-3xl"></div>
       
       <div className="relative z-10">

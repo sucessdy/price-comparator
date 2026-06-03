@@ -8,7 +8,6 @@ const errorMiddleware = (
   next
 ) => {
 
-  console.error(err.stack);
 
   // ==============================
   // OPERATIONAL ERRORS

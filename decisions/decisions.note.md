@@ -141,3 +141,27 @@ src/
 ├── App.tsx
 ├── main.tsx
 └── index.css
+
+
+Let's design the system first.
+
+Current V1
+User
+ ↓
+Search Product
+ ↓
+Compare Prices
+ ↓
+Show Cheapest Platform
+
+
+V2
+User
+ ↓
+Build Cart
+ ↓
+Analyze Cart
+ ↓
+Recommend Strategy
+ ↓
+Show Savings

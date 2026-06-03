@@ -32,7 +32,7 @@ export default function SearchBar({ value, onChange, onSearch, loading }: Search
       <button
         onClick={onSearch}
         disabled={loading || !value.trim()}
-        className="rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-4 text-white font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
+        className="rounded-2xl bg-linear-to-r from-purple-600 to-pink-600 px-8 py-4 text-white font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
       >
         {loading ? <Loader2 className="animate-spin" size={20} /> : <Search size={20} />}
         {loading ? "Searching..." : "Search"}

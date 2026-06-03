@@ -6,9 +6,9 @@ type Props = {
 };
 
 export default function ProductCard({ result }: Props) {
-  const sortedPrices = Object.entries(result.prices).sort((a, b) => a[1] - b[1]);
-  const cheapest = sortedPrices[0];
-  const savings = sortedPrices[sortedPrices.length - 1][1] - cheapest[1];
+  const sortedPrices = Object.entries(result.prices).sort((a, b) => a[1] - b[1]); // sorted 
+  const cheapest = sortedPrices[0]; ///cheapest 
+  const savings = sortedPrices[sortedPrices.length - 1][1] - cheapest[1]; // saving 
 
   return (
     <div className="max-w-4xl mx-auto mt-8 px-4">
@@ -24,7 +24,7 @@ export default function ProductCard({ result }: Props) {
       </div>
 
       {/* Cheapest Platform - Compact Card */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-4 mb-6">
+      <div className="bg-linear-to-r from-green-600 to-emerald-600 rounded-xl p-4 mb-6">
         <div className="flex justify-between items-center">
           <div>
             <p className="text-xs text-green-100 uppercase tracking-wide">Best Price</p>

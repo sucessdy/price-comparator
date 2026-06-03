@@ -8,55 +8,95 @@ import Navbar from "../components/Navbar";
 import RecentSearches from "../components/RecentSearches";
 
 export default function HomePage() {
-  const saved = localStorage.getItem("lastSearch");
-  const parsed = saved ? JSON.parse(saved) : null;
+  const [error , setError] = useState("")
+const [result, setResult] =
+  useState<ProductComparison | null>(() => {
+    const saved =
+      localStorage.getItem("lastSearch");
 
-  const [result, setResult] = useState<ProductComparison | null>(parsed);
-  const [productName, setProductName] = useState(parsed?.product || "");
+    return saved
+      ? JSON.parse(saved)
+      : null;
+  });
+
+const [productName, setProductName] =
+  useState(() => {
+    const saved =
+      localStorage.getItem("lastSearch");
+
+    if (!saved) return "";
+
+    try {
+      return JSON.parse(saved).product || "";
+    } catch {
+      return "";
+    }
+  });
+
   const [loading, setLoading] = useState(false);
- const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-  try {
-    const searches =
-      localStorage.getItem("recentSearches");
 
-    if (!searches) return [];
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try {
+      const searches = localStorage.getItem("recentSearches");
 
-    const parsed = JSON.parse(searches);
+      if (!searches) return [];
 
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
-  } catch {
-    return [];
-  }
-});
+      const parsed = JSON.parse(searches);
+
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
 
   const saveRecentSearch = (product: string) => {
-    const updated = [product, ...recentSearches.filter(s => s !== product)].slice(0, 5);
+    const updated = [
+      product,
+      ...recentSearches.filter((s) => s !== product),
+    ].slice(0, 5); // remove dupliates 
     setRecentSearches(updated);
     localStorage.setItem("recentSearches", JSON.stringify(updated));
   };
 
-  const handleSearch = async () => {
-    if (!productName.trim()) return;
-    setLoading(true);
-    try {
-      const response = await compareProduct(productName);
-      setResult(response.data);
-      localStorage.setItem("lastSearch", JSON.stringify(response.data));
-      saveRecentSearch(productName);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleSearch = async () => {
+  if (!productName.trim()) return;
+
+  setLoading(true);
+  setError("");
+
+  try {
+    const response =
+      await compareProduct(productName);
+
+    setResult(response.data);
+
+    localStorage.setItem(
+      "lastSearch",
+      JSON.stringify(response.data)
+    );
+
+    saveRecentSearch(productName);
+
+  } catch (error) {
+    
+  console.error(error);
+    setResult(null);
+
+    setError("Product not found");
+
+    localStorage.removeItem(
+      "lastSearch"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <main className="min-h-screen  from-slate-900 via-purple-900 to-slate-900">
       <Navbar />
       <Hero />
-      
+
       <SearchBar
         value={productName}
         onChange={setProductName}
@@ -74,6 +114,7 @@ export default function HomePage() {
           {!result && <RecentSearches onSelect={setProductName} />}
         </div>
       )}
+      {error && <div className="text-red-400 text-center mt-6">{error}</div>}
     </main>
   );
 }

@@ -28,6 +28,8 @@ exports.addProduct = async (req, res) => {
 };
 exports.compareProduct = async (req, res) => {
   
+  // console.log("query:", req.query);
+  // console.log("product:", req.query.product);
   const result = await productService.compareProduct(req.query.product);
    console.log(result);
   if (!result) throw new NotFoundError("Product");

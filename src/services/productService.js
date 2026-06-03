@@ -81,6 +81,15 @@ exports.addOrUpdateProduct = async ({
 exports.compareProduct = async (
   productName
 ) => {
+    
+  if (
+  !productName ||
+  typeof productName !== "string"
+) {
+  throw new Error(
+    "Invalid product name"
+  );
+}
   const normalizedName =
     productName.trim().toLowerCase();
 

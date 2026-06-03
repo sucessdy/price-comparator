@@ -6,6 +6,7 @@ import { compareProduct } from "../api/productApi";
 import type { ProductComparison } from "../types/product";
 import Navbar from "../components/Navbar";
 import RecentSearches from "../components/RecentSearches";
+import OptimizeCartPage from "./OptimizeCartPage";
 
 export default function HomePage() {
   const [error , setError] = useState("")
@@ -115,6 +116,8 @@ const handleSearch = async () => {
         </div>
       )}
       {error && <div className="text-red-400 text-center mt-6">{error}</div>}
+
+      <OptimizeCartPage/>
     </main>
   );
 }

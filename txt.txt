@@ -1,9 +1,0 @@
-validation layer 
-business logic 
-authentication 
-validation layers 
-
-any error occur we must handle in the middleware layers 
-
-
--> 

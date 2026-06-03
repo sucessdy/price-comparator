@@ -165,3 +165,12 @@ Analyze Cart
 Recommend Strategy
  ↓
 Show Savings
+
+## V1 Completed
+
+- Backend architecture established
+- MongoDB integration complete
+- Product CRUD foundation complete
+- Client/server structure adopted
+
+Next: Search → Comparison → Price History

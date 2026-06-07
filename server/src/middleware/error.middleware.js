@@ -8,13 +8,12 @@ const errorMiddleware = (
   next
 ) => {
 
-
   // ==============================
   // OPERATIONAL ERRORS
   // ==============================
 
   if (err instanceof AppError) {
-
+ console.error(err) 
     return res
       .status(err.statusCode)
       .json({
@@ -32,7 +31,7 @@ const errorMiddleware = (
   // ==============================
   // UNKNOWN ERRORS
   // ==============================
-
+console.error(err);
   return res.status(500).json({
 
     success: false,

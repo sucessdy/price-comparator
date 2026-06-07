@@ -149,7 +149,7 @@ exports.optimizeCart = async (
       $in: normalizedNames,
     },
   });
-
+console.log(allItems);
   if (allItems.length === 0) {
     throw new NotFoundError("Products");
   }
@@ -276,7 +276,7 @@ exports.optimizeCart = async (
   const splitCartAvailable =
     Object.values(splitItems)
       .every((item) => item.available);
-
+console.log(splitCartAvailable , "split")
   let recommended = null;
 
   if (
@@ -319,6 +319,7 @@ exports.optimizeCart = async (
 
       totalCost:
         lowestPlatformCost,
+         details: singlePlatformDetails 
     };
 
   } else if (splitCartAvailable) {

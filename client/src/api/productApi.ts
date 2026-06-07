@@ -1,19 +1,27 @@
+// api/productApi.ts
 import axios from "axios";
-import type { ApiResponse, ProductComparison } from "../types/product";
+import type { 
+  ApiResponse, 
+  ProductComparison, 
+  OptimizeCartResponse 
+} from "../types/product";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
-export const compareProduct = async (
-  product: string
-) => {
-  
-  const response =
-  await api.get<ApiResponse<ProductComparison>>(
+export const compareProduct = async (product: string): Promise<ApiResponse<ProductComparison>> => {
+  const response = await api.get<ApiResponse<ProductComparison>>(
     `/compare?product=${product}`
   );
+  return response.data;
+};
 
+export const optimizeCart = async (products: string[]): Promise<ApiResponse<OptimizeCartResponse>> => {
+  const response = await api.post<ApiResponse<OptimizeCartResponse>>(
+    "/optimize-cart",
+    { products }
+  );
   return response.data;
 };
 

@@ -4,6 +4,16 @@ export interface Product {
   price: number;
   platform: string;
 }
+export type Platform = 
+  | "amazon" 
+  | "flipkart" 
+  | "croma" 
+  | "vijay sales" 
+  | "ajio" 
+  | "bigbasket" 
+  | "blinkit"
+  | string; 
+
 export interface ProductComparison {
   product: string;
   prices: Record<string, number>;
@@ -17,11 +27,26 @@ export interface CartRecommendation {
   strategy: string;
   platform?: string;
   totalCost: number;
+    details?: Record<string, SplitCartItem>;
 }
 
+export interface SplitCartItem {
+  available: boolean;
+  platform?: Platform;
+  price?: number;
+  message?: string;
+}
 export interface OptimizeCartResponse {
-  recommend: CartRecommendation;
-  saving: number;
+  recommended: CartRecommendation;
+  savings: number;
+  missingProducts: string[];
+  //  splitCart: SplitCart;
+  // singlePlatform: SinglePlatform | null;
+}
+
+export interface CartItem {
+  name: string;
+  quantity: number;
 }
 
 // api type 
@@ -30,3 +55,22 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
+
+// export interface SplitCartItem {
+//   available: boolean;
+//   platform?: string;
+//   price?: number;
+//   message?: string;
+// }
+
+// export interface SplitCart {
+//   items: Record<string, SplitCartItem>;
+//   totalCost: number;
+//   hasMissingItems: boolean;
+// }
+
+// export interface SinglePlatform {
+//   platform: string;
+//   totalCost: number;
+// }

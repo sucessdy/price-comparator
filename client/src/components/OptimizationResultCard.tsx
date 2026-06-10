@@ -4,7 +4,7 @@ import type { OptimizeCartResponse , CartItem} from "../types/product";
 
 type Props = {
   result: OptimizeCartResponse;
-  cartItems: CartItem[];  // Add this
+  cartItems: CartItem[];  
 };
 
 

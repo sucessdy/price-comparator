@@ -3,7 +3,8 @@ import axios from "axios";
 import type { 
   ApiResponse, 
   ProductComparison, 
-  OptimizeCartResponse 
+  OptimizeCartResponse, 
+  CartItem
 } from "../types/product";
 
 const api = axios.create({
@@ -17,7 +18,7 @@ export const compareProduct = async (product: string): Promise<ApiResponse<Produ
   return response.data;
 };
 
-export const optimizeCart = async (products: string[]): Promise<ApiResponse<OptimizeCartResponse>> => {
+export const optimizeCart = async (products: CartItem[]): Promise<ApiResponse<OptimizeCartResponse>> => {
   const response = await api.post<ApiResponse<OptimizeCartResponse>>(
     "/optimize-cart",
     { products }

@@ -6,7 +6,7 @@ const  {ValidationError}  = require("../errors/AppError.js")
 
     const { error, value } =
       schema.validate(req.body);
-
+console.log(error?.message);
     if (error) {
       return next(
        new  ValidationError(error.message)
@@ -14,7 +14,8 @@ const  {ValidationError}  = require("../errors/AppError.js")
     }
 
     req.validatedData = value;
-
+console.log("BODY:", req.body);
+console.log("VALIDATED:", value);
     next();
   };
 };

@@ -20,7 +20,7 @@ exports.compareProduct = async (req, res) => {
   // console.log("product:", req.query.product);
   const result = await productService.compareProduct(req.query.product);
   console.log(result);
-  if (!result) throw new NotFoundError("Product");
+  // if (!result) throw new NotFoundError("Product");
 
   sendResponse(res, {
     message: "Product comparison retrieved",

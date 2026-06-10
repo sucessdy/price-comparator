@@ -1,19 +1,12 @@
 import { useState } from "react";
 import { Plus, Minus, Trash2, ShoppingCart, Sparkles } from "lucide-react";
 import { optimizeCart } from "../api/productApi";
-import type { OptimizeCartResponse } from "../types/product";
+import type { CartItem, OptimizeCartResponse } from "../types/product";
 import OptimizationResultCard from "../components/OptimizationResultCard";
-
-// Extend CartItem since you need quantity for frontend
-// Your backend types don't have quantity yet
-interface CartItemWithQuantity {
-  name: string;
-  quantity: number;
-}
 
 const OptimizeCartPage = () => {
   const [input, setInput] = useState<string>("");
-  const [products, setProducts] = useState<CartItemWithQuantity[]>([]);
+  const [products, setProducts] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<OptimizeCartResponse | null>(null);
 
@@ -69,7 +62,7 @@ const OptimizeCartPage = () => {
   };
 
   const totalItems = products.reduce(
-    (sum: number, product: CartItemWithQuantity) => sum + product.quantity,
+    (sum: number, product: CartItem) => sum + product.quantity,
     0,
   );
 
@@ -78,8 +71,7 @@ const OptimizeCartPage = () => {
 
     setLoading(true);
     try {
-      const productNames = products.map((p: CartItemWithQuantity) => p.name);
-      const response = await optimizeCart(productNames);
+      const response = await optimizeCart(products);
 
       console.log(response);
 
@@ -163,7 +155,7 @@ const OptimizeCartPage = () => {
             </div>
 
             <div className="divide-y divide-white/10">
-              {products.map((product: CartItemWithQuantity) => (
+              {products.map((product: CartItem) => (
                 <div
                   key={product.name}
                   className="p-5 hover:bg-white/5 transition-colors"
@@ -239,64 +231,10 @@ const OptimizeCartPage = () => {
             )}
           </button>
         )}
-
-        {/* Results Section - Using your OptimizeCartResponse type */}
-        {/* {result && (
-          <div className="mt-8 bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/30">
-            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-              <Sparkles className="text-yellow-400" />
-              Optimization Results
-            </h3>
-
-            
-            {result.savings > 0 && (
-              <div className="bg-green-500/20 rounded-xl p-4 mb-6">
-                <p className="text-green-300 text-sm">Total Savings</p>
-                <p className="text-3xl font-bold text-green-400">
-                  ₹{result.savings.toLocaleString()}
-                </p>
-              </div>
-            )}
-
-      
-            <div className="bg-white/10 rounded-xl p-4">
-              <p className="text-slate-300 text-sm mb-1">
-                Recommended Strategy
-              </p>
-              <p className="text-xl font-bold text-white capitalize">
-                {result.recommended.strategy}
-              </p>
-              {result.recommended.platform && (
-                <p className="text-purple-300 mt-1">
-                  Buy from: {result.recommended.platform}
-                </p>
-              )}
-              <p className="text-2xl font-bold text-green-400 mt-2">
-                ₹{result.recommended.totalCost.toLocaleString()}
-              </p>
-            </div>
-
-       
-            <div className="mt-4 text-sm text-slate-400 border-t border-white/10 pt-4 inline-flex rounded-full px-4 py-2 bg-purple-500/20">
-              {result.recommended.strategy === "split-cart" ? (
-                <p>
-                  💡 We found that buying each product from different platforms
-                  gives you the best price.
-                </p>
-              ) : (
-                <p>
-                  💡 Buying all products from a single platform gives you the
-                  best price.
-                </p>
-              )}
-            </div>
-          </div>
-        )} */}
+        
         {result && (
-  <OptimizationResultCard
-    result={result} cartItems={products} 
-  />
-)}
+          <OptimizationResultCard result={result} cartItems={products} />
+        )}
       </div>
     </main>
   );

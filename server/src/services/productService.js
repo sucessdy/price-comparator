@@ -98,7 +98,7 @@ exports.compareProduct = async (
       name: normalizedName,
     });
 console.log(products)
-
+console.log(typeof products) ;
   if (products.length === 0) {
     throw new NotFoundError("Product");
   }
@@ -134,22 +134,32 @@ console.log(products)
 // OPTIMIZE CART
 // ======================================================
 
-exports.optimizeCart = async (
-  products
-) => {
 
-  const normalizedNames =
-    products.map((product) =>
-      product.trim().toLowerCase()
-    );
-
-  // Fetch all matching products
-  const allItems = await Product.find({
-    name: {
-      $in: normalizedNames,
-    },
+exports.optimizeCart = async (products) => {
+  // FIX 1: Handle both array of strings AND array of objects with quantity
+  const normalizedProducts = products.map(product => {
+    // if (typeof product === 'string') {
+    //   return {
+    //     name: product.trim().toLowerCase(),
+    //     quantity: 1
+    //   };
+    // }
+    return {
+      name: product.name.trim().toLowerCase(),
+      quantity: product.quantity || 1
+    };
   });
-console.log(allItems);
+
+  // Extract unique names for database query
+  const names = normalizedProducts.map(p => p.name);
+
+  // Fetch all matching products from database
+  const allItems = await Product.find({
+    name: { $in: names },
+  });
+
+  console.log(`Found ${allItems.length} products in database`);
+  
   if (allItems.length === 0) {
     throw new NotFoundError("Products");
   }
@@ -157,114 +167,90 @@ console.log(allItems);
   // ======================================================
   // GROUP PRODUCTS BY NAME
   // ======================================================
-
   const productsByName = {};
-
   allItems.forEach((item) => {
-
     if (!productsByName[item.name]) {
       productsByName[item.name] = [];
     }
-
-    productsByName[item.name]
-      .push(item);
+    productsByName[item.name].push(item);
   });
 
   // ======================================================
   // SPLIT CART STRATEGY
   // ======================================================
-
   const splitItems = {};
-
   const missingProducts = [];
-
   let splitTotalCost = 0;
 
-  for (const name of normalizedNames) {
-
-    const availableProducts =
-      productsByName[name] || [];
+  // FIX 2: Iterate over normalizedProducts, not names array
+  for (const cartItem of normalizedProducts) {
+    const productName = cartItem.name;
+    const quantity = cartItem.quantity;
+    
+    const availableProducts = productsByName[productName] || [];
 
     if (availableProducts.length === 0) {
-
-      splitItems[name] = {
+      splitItems[productName] = {
         available: false,
         message: "Not found",
       };
-
-      missingProducts.push(name);
-
+      missingProducts.push(productName);
       continue;
     }
 
-    // Find cheapest product
-    const cheapestProduct =
-      availableProducts.reduce(
-        (min, current) =>
-          current.price < min.price
-            ? current
-            : min
-      );
+    // Find cheapest product for this item
+    const cheapestProduct = availableProducts.reduce(
+      (min, current) => current.price < min.price ? current : min
+    );
 
-    splitItems[name] = {
+    splitItems[productName] = {
       available: true,
-      platform:
-        cheapestProduct.platform,
-      price:
-        cheapestProduct.price,
+      platform: cheapestProduct.platform,
+      price: cheapestProduct.price,
+      quantity: quantity, // Add quantity for reference
+      totalPrice: cheapestProduct.price * quantity // Calculate total for this item
     };
 
-    splitTotalCost +=
-      cheapestProduct.price;
+    // FIX 3: Multiply by quantity
+    splitTotalCost += cheapestProduct.price * quantity;
   }
 
   // ======================================================
   // SINGLE PLATFORM STRATEGY
   // ======================================================
-
   const platformMap = {};
 
   allItems.forEach((item) => {
-
     if (!platformMap[item.platform]) {
       platformMap[item.platform] = {};
     }
-
-    platformMap[item.platform][
-      item.name
-    ] = item.price;
+    platformMap[item.platform][item.name] = item.price;
   });
 
   let bestPlatform = null;
-
   let lowestPlatformCost = Infinity;
 
+  // FIX 4: Check each platform for all products
   for (const platform in platformMap) {
-
     let totalCost = 0;
-
     let hasAllProducts = true;
 
-    for (const name of normalizedNames) {
-
-      const price =
-        platformMap[platform][name];
+    for (const cartItem of normalizedProducts) {
+      const productName = cartItem.name;
+      const quantity = cartItem.quantity;
+      const price = platformMap[platform][productName];
 
       if (price == null) {
         hasAllProducts = false;
         break;
       }
 
-      totalCost += price;
+      // FIX 5: Multiply by quantity
+      totalCost += price * quantity;
     }
 
-    if (
-      hasAllProducts &&
-      totalCost < lowestPlatformCost
-    ) {
-      lowestPlatformCost =
-        totalCost;
-
+    if (hasAllProducts && totalCost < lowestPlatformCost) {
+      lowestPlatformCost = totalCost;
       bestPlatform = platform;
     }
   }
@@ -272,64 +258,41 @@ console.log(allItems);
   // ======================================================
   // RECOMMEND BEST STRATEGY
   // ======================================================
+  const splitCartAvailable = Object.values(splitItems).every((item) => item.available);
+  console.log(`Split cart available: ${splitCartAvailable}`);
+  console.log(`Best platform: ${bestPlatform}`);
 
-  const splitCartAvailable =
-    Object.values(splitItems)
-      .every((item) => item.available);
-console.log(splitCartAvailable , "split")
   let recommended = null;
 
-  if (
-    bestPlatform &&
-    splitCartAvailable
-  ) {
-
-    recommended =
-      splitTotalCost <
-      lowestPlatformCost
-
-        ? {
-            strategy: "split-cart",
-
-            totalCost:
-              splitTotalCost,
-
-            details: splitItems,
-          }
-
-        : {
-            strategy:
-              "single-platform",
-
-            platform:
-              bestPlatform,
-
-            totalCost:
-              lowestPlatformCost,
-          };
-
+  if (bestPlatform && splitCartAvailable) {
+    // Both strategies available - choose cheaper
+    if (splitTotalCost < lowestPlatformCost) {
+      recommended = {
+        strategy: "split-cart",
+        totalCost: splitTotalCost,
+        details: splitItems,
+      };
+    } else {
+      recommended = {
+        strategy: "single-platform",
+        platform: bestPlatform,
+        totalCost: lowestPlatformCost,
+        details: splitItems, // Add details for shopping plan
+      };
+    }
   } else if (bestPlatform) {
-
+    // Only single platform available
     recommended = {
-      strategy:
-        "single-platform",
-
-      platform:
-        bestPlatform,
-
-      totalCost:
-        lowestPlatformCost,
-         details: singlePlatformDetails 
+      strategy: "single-platform",
+      platform: bestPlatform,
+      totalCost: lowestPlatformCost,
+      details: splitItems, // Add details for shopping plan
     };
-
   } else if (splitCartAvailable) {
-
+    // Only split cart available
     recommended = {
       strategy: "split-cart",
-
-      totalCost:
-        splitTotalCost,
-
+      totalCost: splitTotalCost,
       details: splitItems,
     };
   }
@@ -337,56 +300,48 @@ console.log(splitCartAvailable , "split")
   // ======================================================
   // CALCULATE SAVINGS
   // ======================================================
+ let savings = 0;
 
-  const savings =
-    bestPlatform &&  
-    splitCartAvailable &&
-    splitTotalCost <
-      lowestPlatformCost
+if (
+  splitTotalCost <
+  lowestPlatformCost
+) {
+  savings =
+    lowestPlatformCost -
+    splitTotalCost;
+}
 
-      ? Number(
-          (
-            lowestPlatformCost -
-            splitTotalCost
-          ).toFixed(2)
-        )
-
-      : 0;
+  // ======================================================
+  // CREATE SHOPPING PLAN (for frontend display)
+  // ======================================================
+  const shoppingPlan = [];
+  
+  if (recommended && recommended.details) {
+    for (const [productName, details] of Object.entries(recommended.details)) {
+      if (details.available) {
+        shoppingPlan.push({
+          product: productName,
+          platform: details.platform,
+          price: details.price,
+          quantity: details.quantity || 1,
+          totalPrice: details.totalPrice || details.price
+        });
+      }
+    }
+  }
 
   // ======================================================
   // FINAL RESPONSE
   // ======================================================
-
   return {
-
     recommended,
-
-    splitCart: {
-      items: splitItems,
-
-      totalCost:
-        splitTotalCost,
-
-      hasMissingItems:
-        missingProducts.length > 0,
-    },
-
-    singlePlatform: 
-      bestPlatform
-        ? {
-            platform:
-              bestPlatform,
-
-            totalCost:
-              lowestPlatformCost,
-          }
-        : null,
-
     savings,
-
-    missingProducts:
-      missingProducts.length > 0
-        ? missingProducts
-        : [],
+    missingProducts: missingProducts,
+    shoppingPlan: shoppingPlan, // Add this for frontend
+    summary: {
+      totalItems: normalizedProducts.reduce((sum, p) => sum + p.quantity, 0),
+      uniqueProducts: normalizedProducts.length,
+      platformsConsidered: Object.keys(platformMap).length
+    }
   };
 };

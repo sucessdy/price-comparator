@@ -2,8 +2,8 @@
 require("dotenv").config()
 const mongoose = require("mongoose");
 
-const Product = require("../src/model/productModel");
-const data = require("../dummyData.json");
+const Product = require("../src/models/productModel");
+const data = require("../scripts/dummyData.json");
 
 async function seed() {
   try {

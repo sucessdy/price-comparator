@@ -74,3 +74,53 @@ export interface ApiResponse<T> {
 //   platform: string;
 //   totalCost: number;
 // }
+
+
+export interface FeeBreakdown {
+  productCost: number;
+  deliveryFee: number;
+  platformFee: number;
+  freeDeliveryApplied: boolean;
+}
+
+export interface SplitCartItem {
+  available: boolean;
+  platform?: Platform;
+  price?: number;
+  quantity?: number;
+  productCost?: number;
+  finalCost?: number;
+  feeBreakdown?: FeeBreakdown;
+  message?: string;
+}
+
+export interface CartRecommendation {
+  strategy: string;
+  platform?: string;
+  totalCost: number;
+  productCost?: number;
+  feeBreakdown?: FeeBreakdown;
+  details?: Record<string, SplitCartItem>;
+}
+
+export interface OptimizeCartResponse {
+  recommended: CartRecommendation;
+  savings: number;
+  missingProducts: string[];
+  shoppingPlan: ShoppingPlanItem[];
+  summary: {
+    totalItems: number;
+    uniqueProducts: number;
+    platformsConsidered: number;
+  };
+}
+
+export interface ShoppingPlanItem {
+  product: string;
+  platform: string;
+  price: number;
+  quantity: number;
+  productCost: number;
+  finalCost: number;
+  savings: number;
+}

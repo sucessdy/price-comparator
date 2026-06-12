@@ -1,32 +1,116 @@
+// server/src/config/platformConfig.js
 const platformConfig = {
   blinkit: {
     deliveryFee: 25,
     platformFee: 8,
-    freeDeliveryAbove: 150,
+    freeDeliveryAbove: 499,
+    trustScore: 4.5,
+    avgDeliveryTime: 15, // minutes
   },
-
   bigbasket: {
     deliveryFee: 30,
     platformFee: 5,
-    freeDeliveryAbove: 500,
+    freeDeliveryAbove: 799,
+    trustScore: 4.3,
+    avgDeliveryTime: 45,
   },
-
   amazon: {
     deliveryFee: 40,
     platformFee: 0,
-    freeDeliveryAbove: 500,
+    freeDeliveryAbove: 999,
+    trustScore: 4.8,
+    avgDeliveryTime: 120,
   },
-
   flipkart: {
     deliveryFee: 40,
     platformFee: 0,
-    freeDeliveryAbove:120,
+    freeDeliveryAbove: 999,
+    trustScore: 4.6,
+    avgDeliveryTime: 96,
   },
-
   croma: {
     deliveryFee: 50,
     platformFee: 0,
     freeDeliveryAbove: 2000,
+    trustScore: 4.4,
+    avgDeliveryTime: 180,
+  },
+  myntra: {
+    deliveryFee: 35,
+    platformFee: 0,
+    freeDeliveryAbove: 799,
+    trustScore: 4.2,
+    avgDeliveryTime: 72,
+  },
+  ajio: {
+    deliveryFee: 35,
+    platformFee: 0,
+    freeDeliveryAbove: 799,
+    trustScore: 4.1,
+    avgDeliveryTime: 96,
+  },
+  "reliance digital": {
+    deliveryFee: 50,
+    platformFee: 0,
+    freeDeliveryAbove: 1500,
+    trustScore: 4.3,
+    avgDeliveryTime: 144,
+  },
+  "vijay sales": {
+    deliveryFee: 60,
+    platformFee: 0,
+    freeDeliveryAbove: 2000,
+    trustScore: 4.0,
+    avgDeliveryTime: 168,
+  },
+  tatacliq: {
+    deliveryFee: 45,
+    platformFee: 0,
+    freeDeliveryAbove: 1200,
+    trustScore: 4.2,
+    avgDeliveryTime: 120,
+  },
+  zepto: {
+    deliveryFee: 20,
+    platformFee: 5,
+    freeDeliveryAbove: 299,
+    trustScore: 4.4,
+    avgDeliveryTime: 10,
+  },
+  jiomart: {
+    deliveryFee: 30,
+    platformFee: 0,
+    freeDeliveryAbove: 599,
+    trustScore: 4.0,
+    avgDeliveryTime: 144,
+  },
+  "paytm mall": {
+    deliveryFee: 40,
+    platformFee: 0,
+    freeDeliveryAbove: 999,
+    trustScore: 3.8,
+    avgDeliveryTime: 120,
+  },
+  shopclues: {
+    deliveryFee: 50,
+    platformFee: 0,
+    freeDeliveryAbove: 1000,
+    trustScore: 3.5,
+    avgDeliveryTime: 168,
+  },
+  snapdeal: {
+    deliveryFee: 45,
+    platformFee: 0,
+    freeDeliveryAbove: 999,
+    trustScore: 3.7,
+    avgDeliveryTime: 144,
+  },
+  meesho: {
+    deliveryFee: 30,
+    platformFee: 0,
+    freeDeliveryAbove: 599,
+    trustScore: 3.9,
+    avgDeliveryTime: 120,
   },
 };
 

@@ -10,7 +10,6 @@ export default function OptimizationResultCard({ result, cartItems }: Props) {
   const isSplitCart = result.recommended.strategy === "split-cart";
   const hasSavings = result.savings > 0;
   const hasMissingProducts = result.missingProducts?.length > 0;
-
   return (
     <div className="mt-8 animate-fade-in-up space-y-6">
       
@@ -26,21 +25,41 @@ export default function OptimizationResultCard({ result, cartItems }: Props) {
           </p>
         </div>
         
-        <div className="divide-y divide-white/10">
-          {cartItems.map((item, idx) => (
-            <div key={idx} className="p-4 hover:bg-white/5 transition-colors">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-white font-medium capitalize">{item.name}</p>
-                  <p className="text-sm text-slate-400">Quantity: {item.quantity}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+       <div className="divide-y divide-white/10">
+  {result.shoppingPlan.map((item, idx) => (
+    <div
+      key={idx}
+      className="p-4 hover:bg-white/5 transition-colors"
+    >
+      <div className="flex justify-between items-center">
+        <div>
+          <p className="text-white font-medium capitalize">
+            {item.product}
+          </p>
+
+          <p className="text-sm text-slate-400">
+            Qty: {item.quantity}
+          </p>
+        </div>
+
+        <div className="text-right">
+          <p className="text-green-400 font-semibold">
+            ₹{item.price}
+          </p>
+
+          <p className="text-xs text-slate-400">
+            {item.platform}
+          </p>
         </div>
       </div>
+    </div>
+  ))}
+</div>
+      </div>
 
-     
+
+
+
       {/* CARD 3: PRICE BREAKDOWN */}
       {!isSplitCart && result.recommended.feeBreakdown && (
         <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden">

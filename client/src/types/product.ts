@@ -40,8 +40,8 @@ export interface OptimizeCartResponse {
   recommended: CartRecommendation;
   savings: number;
   missingProducts: string[];
-  //  splitCart: SplitCart;
-  // singlePlatform: SinglePlatform | null;
+   splitCart: SplitCart;
+  singlePlatform: SinglePlatform | null;
 }
 
 export interface CartItem {
@@ -57,23 +57,23 @@ export interface ApiResponse<T> {
 }
 
 
-// export interface SplitCartItem {
-//   available: boolean;
-//   platform?: string;
-//   price?: number;
-//   message?: string;
-// }
+export interface SplitCartItem {
+  available: boolean;
+  platform?: string;
+  price?: number;
+  message?: string;
+}
 
-// export interface SplitCart {
-//   items: Record<string, SplitCartItem>;
-//   totalCost: number;
-//   hasMissingItems: boolean;
-// }
+export interface SplitCart {
+  items: Record<string, SplitCartItem>;
+  totalCost: number;
+  hasMissingItems: boolean;
+}
 
-// export interface SinglePlatform {
-//   platform: string;
-//   totalCost: number;
-// }
+export interface SinglePlatform {
+  platform: string;
+  totalCost: number;
+}
 
 
 export interface FeeBreakdown {

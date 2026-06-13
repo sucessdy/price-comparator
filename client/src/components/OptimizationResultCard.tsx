@@ -11,9 +11,6 @@ export default function OptimizationResultCard({ result, cartItems }: Props) {
   const hasSavings = result.savings > 0;
   const hasMissingProducts = result.missingProducts?.length > 0;
 
-  // ✅ USE THE BACKEND'S SHOPPING PLAN INSTEAD of building your own
-  // const shoppingPlan = result.shoppingPlan || [];
-
   return (
     <div className="mt-8 animate-fade-in-up space-y-6">
       

@@ -1,9 +1,17 @@
+// ======================================================
+// BASE TYPES
+// ======================================================
+
 export interface Product {
   _id: string;
   name: string;
   price: number;
   platform: string;
+  priceHistory?: PriceHistoryEntry[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
+
 export type Platform = 
   | "amazon" 
   | "flipkart" 
@@ -12,7 +20,34 @@ export type Platform =
   | "ajio" 
   | "bigbasket" 
   | "blinkit"
-  | string; 
+  | "zepto"
+  | "myntra"
+  | "reliance digital"
+  | "tatacliq"
+  | "snapdeal"
+  | "meesho"
+  | "jiomart"
+  | "paytm mall"
+  | "shopclues"
+  | string;
+
+export interface PriceHistoryEntry {
+  price: number;
+  date: Date;
+}
+
+// ======================================================
+// CART ITEMS
+// ======================================================
+
+export interface CartItem {
+  name: string;
+  quantity: number;
+}
+
+// ======================================================
+// COMPARE PRODUCT
+// ======================================================
 
 export interface ProductComparison {
   product: string;
@@ -23,58 +58,9 @@ export interface ProductComparison {
   };
 }
 
-export interface CartRecommendation {
-  strategy: string;
-  platform?: string;
-  totalCost: number;
-    details?: Record<string, SplitCartItem>;
-}
-
-export interface SplitCartItem {
-  available: boolean;
-  platform?: Platform;
-  price?: number;
-  message?: string;
-}
-export interface OptimizeCartResponse {
-  recommended: CartRecommendation;
-  savings: number;
-  missingProducts: string[];
-   splitCart: SplitCart;
-  singlePlatform: SinglePlatform | null;
-}
-
-export interface CartItem {
-  name: string;
-  quantity: number;
-}
-
-// api type 
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
-
-
-export interface SplitCartItem {
-  available: boolean;
-  platform?: string;
-  price?: number;
-  message?: string;
-}
-
-export interface SplitCart {
-  items: Record<string, SplitCartItem>;
-  totalCost: number;
-  hasMissingItems: boolean;
-}
-
-export interface SinglePlatform {
-  platform: string;
-  totalCost: number;
-}
-
+// ======================================================
+// FEE BREAKDOWN
+// ======================================================
 
 export interface FeeBreakdown {
   productCost: number;
@@ -82,6 +68,10 @@ export interface FeeBreakdown {
   platformFee: number;
   freeDeliveryApplied: boolean;
 }
+
+// ======================================================
+// SPLIT CART ITEMS
+// ======================================================
 
 export interface SplitCartItem {
   available: boolean;
@@ -94,8 +84,29 @@ export interface SplitCartItem {
   message?: string;
 }
 
+export interface SplitCart {
+  items: Record<string, SplitCartItem>;
+  totalCost: number;
+  hasMissingItems: boolean;
+}
+
+// ======================================================
+// SINGLE PLATFORM
+// ======================================================
+
+export interface SinglePlatform {
+  platform: string;
+  totalCost: number;
+  productCost?: number;
+  feeBreakdown?: FeeBreakdown;
+}
+
+// ======================================================
+// CART RECOMMENDATION
+// ======================================================
+
 export interface CartRecommendation {
-  strategy: string;
+  strategy: "single-platform" | "split-cart";
   platform?: string;
   totalCost: number;
   productCost?: number;
@@ -103,11 +114,43 @@ export interface CartRecommendation {
   details?: Record<string, SplitCartItem>;
 }
 
+// ======================================================
+// SHOPPING PLAN
+// ======================================================
+
+export interface ShoppingPlanItem {
+  product: string;
+  platform: string;
+  price: number;
+  quantity: number;
+  totalPrice: number;
+  productCost?: number;
+  finalCost?: number;
+  fees?: FeeBreakdown;
+  savings?: number;
+}
+
+// ======================================================
+// PLATFORM ALTERNATIVE
+// ======================================================
+
+export interface PlatformAlternative {
+  platform: string;
+  totalCost: number;
+  productCost: number;
+  feeBreakdown?: FeeBreakdown;
+}
+
+// ======================================================
+// OPTIMIZE CART RESPONSE (FIXED)
+// ======================================================
+
 export interface OptimizeCartResponse {
   recommended: CartRecommendation;
   savings: number;
   missingProducts: string[];
   shoppingPlan: ShoppingPlanItem[];
+  alternatives: PlatformAlternative[];  // ← Added this!
   summary: {
     totalItems: number;
     uniqueProducts: number;
@@ -115,12 +158,12 @@ export interface OptimizeCartResponse {
   };
 }
 
-export interface ShoppingPlanItem {
-  product: string;
-  platform: string;
-  price: number;
-  quantity: number;
-  productCost: number;
-  finalCost: number;
-  savings: number;
+// ======================================================
+// API RESPONSE WRAPPER
+// ======================================================
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
 }

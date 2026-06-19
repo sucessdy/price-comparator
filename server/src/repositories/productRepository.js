@@ -61,7 +61,7 @@ class ProductRepository {
    */
   async updatePriceWithHistory(name, platform, newPrice, oldPrice) {
     return Product.findOneAndUpdate(
-      {
+      { 
         name: name.trim().toLowerCase(),
         platform: platform.trim().toLowerCase(),
       },
@@ -75,7 +75,8 @@ class ProductRepository {
         },
       },
       {
-        new: true,
+        upsert: true,
+    returnDocument: 'after' 
       }
     );
   }
@@ -94,6 +95,8 @@ class ProductRepository {
    * @param {string} platform - Platform name
    * @returns {Promise<Array>} Price history array
    */
+
+  
   async getPriceHistory(name, platform) {
     const product = await Product.findOne({
       name: name.trim().toLowerCase(),

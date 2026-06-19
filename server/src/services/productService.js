@@ -1,46 +1,23 @@
-const Product = require("../models/productModel");
-const { NotFoundError } = require("../errors/AppError");
-
+const productRepository = require("../repositories/productRepository");
 const platformConfig = require("../config/platformConfig");
 const calculateFinalCost = require("../utils/calculateFinalCost");
-// add  product
+const { NotFoundError } = require("../errors/AppError");
+
+// ======================================================
+// ADD OR UPDATE PRODUCT
+// ======================================================
 
 exports.addOrUpdateProduct = async ({ name, price, platform }) => {
-  const normalizedName = name.trim().toLowerCase();
-
-  const normalizedPlatform = platform.trim().toLowerCase();
-
-  // Find existing product
-  const existing = await Product.findOne({
-    name: normalizedName,
-    platform: normalizedPlatform,
-  });
-
-  // ======================================================
-  // UPDATE EXISTING PRODUCT
-  // ======================================================
+  // Find existing product using repository
+  const existing = await productRepository.findByNameAndPlatform(name, platform);
 
   if (existing) {
-    const updatedProduct = await Product.findOneAndUpdate(
-      {
-        name: normalizedName,
-        platform: normalizedPlatform,
-      },
-      {
-        $set: {
-          price,
-        },
-
-        $push: {
-          priceHistory: {
-            price: existing.price,
-            date: new Date(),
-          },
-        },
-      },
-      {
-        new: true,
-      },
+    // Update existing product with price history
+    const updatedProduct = await productRepository.updatePriceWithHistory(
+      name,
+      platform,
+      price,
+      existing.price
     );
 
     return {
@@ -49,15 +26,11 @@ exports.addOrUpdateProduct = async ({ name, price, platform }) => {
     };
   }
 
-  // ======================================================
-  // CREATE NEW PRODUCT
-  // ======================================================
-
-  const newProduct = await Product.create({
-    name: normalizedName,
+  // Create new product
+  const newProduct = await productRepository.create({
+    name,
     price,
-    platform: normalizedPlatform,
-    priceHistory: [],
+    platform,
   });
 
   return {
@@ -74,19 +47,15 @@ exports.compareProduct = async (productName) => {
   if (!productName || typeof productName !== "string") {
     throw new Error("Invalid product name");
   }
-  const normalizedName = productName.trim().toLowerCase();
 
-  const products = await Product.find({
-    name: normalizedName,
-  });
-  console.log(products);
-  console.log(typeof products);
+  // Use repository to find products
+  const products = await productRepository.findByName(productName);
+
   if (products.length === 0) {
     throw new NotFoundError("Product");
   }
 
   const prices = {};
-
   let cheapestPlatform = null;
   let lowestPrice = Infinity;
 
@@ -100,7 +69,7 @@ exports.compareProduct = async (productName) => {
   });
 
   return {
-    product: normalizedName,
+    product: productName.trim().toLowerCase(),
     prices,
     cheapest: {
       platform: cheapestPlatform,
@@ -109,6 +78,9 @@ exports.compareProduct = async (productName) => {
   };
 };
 
+// ======================================================
+// OPTIMIZE CART
+// ======================================================
 
 exports.optimizeCart = async (products) => {
   // Normalize products
@@ -127,10 +99,8 @@ exports.optimizeCart = async (products) => {
 
   const names = normalizedProducts.map((p) => p.name);
 
-  // Fetch all products
-  const allItems = await Product.find({
-    name: { $in: names },
-  });
+  // Use repository to fetch all products
+  const allItems = await productRepository.findByNames(names);
 
   if (allItems.length === 0) {
     throw new NotFoundError("Products");
@@ -211,7 +181,7 @@ exports.optimizeCart = async (products) => {
   let bestPlatform = null;
   let lowestPlatformCost = Infinity;
   let bestPlatformBreakdown = null;
-  const alternatives = []; // ✅ Fixed: alternatives array outside loop
+  const alternatives = [];
 
   for (const platform in platformMap) {
     let totalProductCost = 0;
@@ -241,7 +211,6 @@ exports.optimizeCart = async (products) => {
         breakdown = calculation.breakdown;
       }
 
-      // ✅ Add to alternatives
       alternatives.push({
         platform: platform,
         totalCost: finalCost,
@@ -343,16 +312,14 @@ exports.optimizeCart = async (products) => {
       }
     }
   }
-
-  // ======================================================
-  // FINAL RESPONSE
-  // ======================================================
+// After calculating alternatives, sort them by price
+alternatives.sort((a, b) => a.totalCost - b.totalCost);
   return {
     recommended,
     savings,
     missingProducts,
     shoppingPlan,
-    alternatives, // ✅ Now properly defined
+    alternatives,
     summary: {
       totalItems: normalizedProducts.reduce((sum, p) => sum + p.quantity, 0),
       uniqueProducts: normalizedProducts.length,

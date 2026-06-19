@@ -1,43 +1,61 @@
-// controllers/productController.js
 const productService = require("../services/productService");
 const { NotFoundError } = require("../errors/AppError");
-
 const sendResponse = require("../utils/sendResponse");
 
+// ======================================================
+// ADD OR UPDATE PRODUCT
+// ======================================================
 exports.addProduct = async (req, res) => {
+  // req.validatedData comes from validate middleware
   const result = await productService.addOrUpdateProduct(req.validatedData);
 
   sendResponse(res, {
     statusCode: result.type === "created" ? 201 : 200,
-
-    message: result.type === "created" ? "Product created" : "Product updated",
-
+    message: result.type === "created" ? "Product created successfully" : "Product updated successfully",
     data: result.product,
   });
 };
+
+// ======================================================
+// COMPARE PRODUCT
+// ======================================================
 exports.compareProduct = async (req, res) => {
+  const productName = req.query.product;
   
-  const result = await productService.compareProduct(req.query.product);
-  // console.log(result);
- if (!result) {
+  if (!productName) {
+    throw new Error("Product name is required");
+  }
+  
+  const result = await productService.compareProduct(productName);
+  
+  if (!result) {
     throw new NotFoundError("Product");
   }
+  
   sendResponse(res, {
-    message: "Product comparison retrieved",
+    message: "Product comparison retrieved successfully",
     data: result,
   });
 };
 
+// ======================================================
+// OPTIMIZE CART
+// ======================================================
 exports.optimizeCart = async (req, res) => {
   console.log("BODY:", req.body);
   console.log("VALIDATED:", req.validatedData);
-  const result = await productService.optimizeCart(req.validatedData.products);
-console.log(req.body.products)
-  // if (!result.recommended) throw new NotFoundError("Cart optimization");
-
-sendResponse(res, {
-  message: "Cart optimization completed",
-  data: result,
   
-});
+  // Get products from validatedData or body
+  let products = req.validatedData?.products || req.body?.products;
+  
+  if (!products || !Array.isArray(products) || products.length === 0) {
+    throw new Error("Products array is required");
+  }
+  
+  const result = await productService.optimizeCart(products);
+  
+  sendResponse(res, {
+    message: "Cart optimized successfully",
+    data: result,
+  });
 };

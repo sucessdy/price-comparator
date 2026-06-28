@@ -7,6 +7,7 @@ const { v4: uuidv4 } = require("uuid");
 const errorMiddleware = require("./middleware/error.middleware");
 
 const app = express();
+
 // app.get("/test", (req, res) => {
 //   res.send("Server works");
 // });
@@ -22,6 +23,7 @@ app.use(cors());
 
 const ProductRoutes = require("./routes/productRoutes");
 app.use("/api", ProductRoutes); 
+// app.use("/auth/api", userRouters)
 app.use(errorMiddleware);
 
 module.exports = app;

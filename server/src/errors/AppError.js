@@ -24,4 +24,10 @@ class ValidationError extends AppError {
   }
 }
 
-module.exports = { AppError, NotFoundError, ValidationError };
+class ConflictError extends AppError{ 
+  constructor(message){
+    const confictMessage = Array.isArray(message) ? message.map(m=> m.message ).join(", ") : message; 
+    super(confictMessage, 409, "CONFICT_ERROR")
+  }
+}
+module.exports = { AppError, NotFoundError, ValidationError,ConflictError };

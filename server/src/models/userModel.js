@@ -1,5 +1,5 @@
-const mongoose = require  ("mongoose")
-
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
+      minlength: 6,
       select: false,
     },
 
@@ -28,11 +29,25 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "user"],
       default: "user",
     },
+    refreshToken: {
+      type: String,
+      select: false,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+userSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
 
 const User = mongoose.model("User", userSchema);
 

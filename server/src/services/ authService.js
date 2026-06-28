@@ -1,40 +1,106 @@
 const UserRepository = require("../repositories/userRepository");
 const bcrypt = require("bcrypt");
-const { NotFoundError } = require("../errors/AppError");
+const { NotFoundError, ConflictError, AppError, UnauthorizedError } = require("../errors/AppError");
 const config = require("../config/config");
 const jwt = require("jsonwebtoken");
-exports.Register = async ({ name, email, password }) => {
-  const existingEmail = await UserRepository.findByEmail(email);
 
-  if (existingEmail) {
-    const updateEmail = await UserRepository.updateById(
-      existingEmail.id,
-      existingEmail.email,
-    );
-    return {
-      type: "update",
-      email: updateEmail,
-    };
+exports.register = async ({ name, email, password }) => {
+  // Check for existing user
+  const existingUser = await UserRepository.findByEmail(email);
+
+  if (existingUser) {
+    throw new ConflictError("Email already registered");
   }
 
+  // Hash password
   const hashPassword = await bcrypt.hash(password, 10);
-  if (!hashPassword) {
-   
-  }
 
+  // Create new user
   const user = await UserRepository.create({
     name,
     email,
-    hashPassword,
+    password: hashPassword,
   });
 
-  const refereshToken = await jwt.sign({ id: user._id }, config.JWT_SECRET, {
-    expiresIn: "7d",
-  });
-  const refereshTokenHash = await bcrypt.hash(refereshToken, 10) 
+  // Generate refresh token
+  const refreshToken = jwt.sign(
+    { id: user._id }, 
+    config.JWT_SECRET, 
+    { expiresIn: "7d" }
+  );
+
+  // Hash and store refresh token
+  const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+  user.refreshToken = refreshTokenHash;
+  await user.save();
+
+  // Generate access token
+  const accessToken = jwt.sign(
+    { user: user._id },
+    config.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
 
   return {
     type: "created",
-    user: user,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email
+    },
+    accessToken: accessToken,
+    refreshToken: refreshToken,
   };
 };
+
+exports.login = async ({ email, password }) => {
+  // Find user by email (pass string, not object)
+  const user = await UserRepository.findByEmail(email);
+  
+  if (!user) {
+    throw new UnauthorizedError("Invalid email or password");
+  }
+
+  // COMPARE password - not hash!
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  
+  if (!isPasswordValid) {
+    throw new UnauthorizedError("Invalid email or password");
+  }
+
+  // Generate refresh token
+  const refreshToken = jwt.sign(
+    { id: user._id }, 
+    config.JWT_SECRET, 
+    { expiresIn: "7d" }
+  );
+
+  // Hash and store refresh token
+  const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+  user.refreshToken = refreshTokenHash;
+  await user.save();
+
+  // Generate access token
+  const accessToken = jwt.sign(
+    { user: user._id },
+    config.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  return {
+    type: "login",
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email
+    },
+    accessToken: accessToken,
+    refreshToken: refreshToken,
+  };
+};
+
+exports.refreshAccessToken = ({refreshToken}) => {
+if(!refreshToken) { 
+  throw 
+}
+}

@@ -10,6 +10,10 @@ if (!process.env.JWT_SECRET){
 }
 const config = { 
     MONGO_URI :process.env.MONGO_URI, 
-    JWT_SECRET :process.env.JWT_SECRET
+    JWT_SECRET :process.env.JWT_SECRET, 
+     JWT_ACCESS_EXPIRE: "15m",
+  JWT_REFRESH_EXPIRE: "7d", 
+   PORT: process.env.PORT || 3000,
+  BCRYPT_SALT_ROUNDS: 10,
 }
 module.exports = config

@@ -16,7 +16,7 @@ class UserRepository {
     });
 
     if (includePassword) {
-      query.select("+password");
+      query.select("+password +refreshToken");
     }
 
     return query;
@@ -32,6 +32,10 @@ class UserRepository {
     return User.findByIdAndUpdate(id, data, {
       new: true,
     });
+  }
+
+  async findByIdWithRefreshToken(id) { 
+    return User.findById(id).select("+refreshToken")
   }
 
   async deleteUser(id) {

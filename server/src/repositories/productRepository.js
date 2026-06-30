@@ -91,9 +91,9 @@ class ProductRepository {
 
   /**
    * Get price history for a product on a platform
-   * @param {string} name - Product name
-   * @param {string} platform - Platform name
-   * @returns {Promise<Array>} Price history array
+   * @param {string} name 
+   * @param {string} platform 
+   * @returns {Promise<Array>}
    */
 
   

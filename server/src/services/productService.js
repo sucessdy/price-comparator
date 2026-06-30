@@ -8,11 +8,9 @@ const { NotFoundError } = require("../errors/AppError");
 // ======================================================
 
 exports.addOrUpdateProduct = async ({ name, price, platform }) => {
-  // Find existing product using repository
   const existing = await productRepository.findByNameAndPlatform(name, platform);
 
   if (existing) {
-    // Update existing product with price history
     const updatedProduct = await productRepository.updatePriceWithHistory(
       name,
       platform,
@@ -48,7 +46,6 @@ exports.compareProduct = async (productName) => {
     throw new Error("Invalid product name");
   }
 
-  // Use repository to find products
   const products = await productRepository.findByName(productName);
 
   if (products.length === 0) {
@@ -99,7 +96,6 @@ exports.optimizeCart = async (products) => {
 
   const names = normalizedProducts.map((p) => p.name);
 
-  // Use repository to fetch all products
   const allItems = await productRepository.findByNames(names);
 
   if (allItems.length === 0) {

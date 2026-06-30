@@ -19,16 +19,12 @@ class AuthService {
       throw new ConflictError("Email already registered");
     }
 
-    // Hash password
-
-    // Create new user
     const user = await UserRepository.create({
       name,
       email,
       password
     });
 
-    // Generate tokens
     const accessToken = TokenUtils.generatedAccessToken(user._id);
     const refreshToken = TokenUtils.generatedRefreshToken(user._id);
 
@@ -97,14 +93,13 @@ class AuthService {
       throw new AppError("Invalid or expired refresh token", 401);
     }
 
-    // Find user by ID from token (not email)
+    // Find user by ID from token 
     const user = await UserRepository.findByIdWithRefreshToken(decoded.id)
 
     if (!user || !user.refreshToken) {
       throw new AppError("Invalid user or token", 401);
     }
 
-    // Compare tokens
     const isValidToken = await TokenUtils.compareToken(
       refreshToken,
       user.refreshToken
@@ -114,11 +109,9 @@ class AuthService {
       throw new AppError("Invalid refresh token", 401);
     }
 
-    // Generate new token pair
     const newAccessToken = TokenUtils.generatedAccessToken(user._id);
     const newRefreshToken = TokenUtils.generatedRefreshToken(user._id);
 
-    // Update refresh token in DB
     user.refreshToken = await TokenUtils.hashToken(newRefreshToken);
     await user.save();
 
@@ -128,9 +121,8 @@ class AuthService {
     };
   }
 
-  // Logout
   static async logout(userId) {
-    const user = await UserRepository.findById(userId);
+    const user = await UserRepository.findByIdWithRefreshToken(userId);
 
     if (user) {
       user.refreshToken = null;
@@ -142,7 +134,7 @@ class AuthService {
 
   // Get current user
   static async getCurrentUser(userId) {
-    const user = await UserRepository.findById(userId);
+    const user = await UserRepository.findByIdWithRefreshToken(userId);
 
     if (!user) {
       throw new AppError("User not found", 404);
@@ -152,6 +144,7 @@ class AuthService {
       id: user._id,
       name: user.name,
       email: user.email,
+      role : user.role
     };
   }
 }

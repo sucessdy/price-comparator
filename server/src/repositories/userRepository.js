@@ -1,6 +1,6 @@
 const User = require("../models/userModel");
 class UserRepository {
-  // * Create a new user
+  //  Create a new user
 
   async create(userData) {
     return User.create(userData);
@@ -21,12 +21,11 @@ class UserRepository {
 
     return query;
   }
-  // Find user by id
-  //    * Used after JWT verification
+  //  find by id 
   async findById(id) {
     return User.findById(id);
   }
-  // * Update user
+  //  Update user
 
   async updateById(id, data) {
     return User.findByIdAndUpdate(id, data, {

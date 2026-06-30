@@ -6,7 +6,6 @@ const sendResponse = require("../utils/sendResponse");
 // ADD OR UPDATE PRODUCT
 // ======================================================
 exports.addProduct = async (req, res) => {
-  // req.validatedData comes from validate middleware
   const result = await productService.addOrUpdateProduct(req.validatedData);
 
   sendResponse(res, {
@@ -45,7 +44,7 @@ exports.optimizeCart = async (req, res) => {
   console.log("BODY:", req.body);
   console.log("VALIDATED:", req.validatedData);
   
-  // Get products from validatedData or body
+
   let products = req.validatedData?.products || req.body?.products;
   
   if (!products || !Array.isArray(products) || products.length === 0) {

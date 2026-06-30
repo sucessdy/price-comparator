@@ -2,10 +2,9 @@
 function calculateFinalCost(productCost, config) {
   let total = productCost;
   
-  // Add platform fee (always)
+
   total += config.platformFee || 0;
   
-  // Add delivery fee only if under free delivery threshold
   if (productCost < (config.freeDeliveryAbove || Infinity)) {
     total += config.deliveryFee || 0;
   }
@@ -20,5 +19,6 @@ function calculateFinalCost(productCost, config) {
     }
   };
 }
+
 
 module.exports = calculateFinalCost;

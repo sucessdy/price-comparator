@@ -17,12 +17,18 @@ class TokenUtils {
   static verifyToken ( token) {
     return jwt.verify(token , config.JWT_SECRET)
   }
+
   static  async hashToken (token ){
 return await bcrypt.hash(token, 10)
   }
   static async compareToken(plainToken, hashToken){
     return await bcrypt.compare(plainToken, hashToken) 
   }
+
+  static async cookie (){ 
+    
+  }
+
 }
 
 

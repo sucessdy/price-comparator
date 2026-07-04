@@ -1,14 +1,23 @@
-const Joi = require("joi")
-const registerUser = Joi.object({ 
-    name: Joi.string().min(2).max(100).required().trim(), 
-    email : Joi.string().email().trim().required(), 
-    password : Joi.string().min(8).required() 
+const Joi = require("joi");
 
-})
+const registerSchema = Joi.object({
+  name: Joi.string().trim().min(2).max(100).required().messages({
+    "string.empty": "Name is required",
+    "string.min": "Name must be at least 2 characters",
+  }),
 
-const loginUser = Joi.object({ 
-   email: Joi.string().email().trim().required(),
+  email: Joi.string().trim().lowercase().email().required(),
 
-  password: Joi.string().min(8).required(),
-})
-module.exports = { registerUser , loginUser}  ; 
+  password: Joi.string().min(8).max(128).required(),
+});
+
+const loginSchema = Joi.object({
+  email: Joi.string().trim().lowercase().email().required(),
+
+  password: Joi.string().min(8).max(128).required(),
+});
+
+module.exports = {
+  registerSchema,
+  loginSchema,
+};

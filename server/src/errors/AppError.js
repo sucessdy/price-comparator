@@ -30,4 +30,11 @@ class ConflictError extends AppError{
     super(confictMessage, 409, "CONFICT_ERROR")
   }
 }
-module.exports = { AppError, NotFoundError, ValidationError,ConflictError };
+class UnauthorizedError extends AppError { 
+  constructor(message) {
+    const UnauthorizedMessage = Array.isArray(message) ? message.map(m => m.message ).join(", ") : message; 
+    super(UnauthorizedMessage, 401, "UNAUTHORIZED_ERROR")
+  }
+}
+
+module.exports = { AppError, NotFoundError, ValidationError,ConflictError, UnauthorizedError };

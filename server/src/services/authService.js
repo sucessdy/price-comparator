@@ -1,5 +1,4 @@
 const UserRepository = require("../repositories/userRepository");
-
 const {
   ConflictError,
   AppError,
@@ -8,11 +7,9 @@ const {
 
 const TokenUtils = require("../utils/tokenUtils");
 
-
 class AuthService {
   // Register
   static async register({ name, email, password }) {
-    // Check for existing user
     const existingUser = await UserRepository.findByEmail(email);
 
     if (existingUser) {
@@ -22,13 +19,12 @@ class AuthService {
     const user = await UserRepository.create({
       name,
       email,
-      password
+      password,
     });
 
-    const accessToken = TokenUtils.generatedAccessToken(user._id);
-    const refreshToken = TokenUtils.generatedRefreshToken(user._id);
+    const accessToken = TokenUtils.generateAccessToken(user._id);
+    const refreshToken = TokenUtils.generateRefreshToken(user._id);
 
-    // Hash and store refresh token
     const refreshTokenHash = await TokenUtils.hashToken(refreshToken);
     user.refreshToken = refreshTokenHash;
     await user.save();
@@ -46,25 +42,21 @@ class AuthService {
 
   // Login
   static async login({ email, password }) {
-    // Find user and include password
     const user = await UserRepository.findByEmail(email, true);
 
     if (!user) {
       throw new UnauthorizedError("Invalid email or password");
     }
 
-    // Compare password
-    const isPasswordValid = await user.comparePassword(password)
+    const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedError("Invalid email or password");
     }
 
-    // Generate tokens
-    const accessToken = TokenUtils.generatedAccessToken(user._id);
-    const refreshToken = TokenUtils.generatedRefreshToken(user._id);
+    const accessToken = TokenUtils.generateAccessToken(user._id);
+    const refreshToken = TokenUtils.generateRefreshToken(user._id);
 
-    // Hash and store refresh token
     const refreshTokenHash = await TokenUtils.hashToken(refreshToken);
     user.refreshToken = refreshTokenHash;
     await user.save();
@@ -80,7 +72,6 @@ class AuthService {
     };
   }
 
-  // Refresh Access Token - FIXED
   static async refreshAccessToken(refreshToken) {
     if (!refreshToken) {
       throw new AppError("Refresh token is required", 401);
@@ -93,14 +84,14 @@ class AuthService {
       throw new AppError("Invalid or expired refresh token", 401);
     }
 
-    // Find user by ID from token 
-    const user = await UserRepository.findByIdWithRefreshToken(decoded.id)
+    const user = await UserRepository.findByIdWithRefreshToken(decoded.id);
 
     if (!user || !user.refreshToken) {
       throw new AppError("Invalid user or token", 401);
     }
 
-    const isValidToken = await TokenUtils.compareToken(
+    // Using compareTokens 
+    const isValidToken = await TokenUtils.compareTokens(
       refreshToken,
       user.refreshToken
     );
@@ -109,8 +100,8 @@ class AuthService {
       throw new AppError("Invalid refresh token", 401);
     }
 
-    const newAccessToken = TokenUtils.generatedAccessToken(user._id);
-    const newRefreshToken = TokenUtils.generatedRefreshToken(user._id);
+    const newAccessToken = TokenUtils.generateAccessToken(user._id);
+    const newRefreshToken = TokenUtils.generateRefreshToken(user._id);
 
     user.refreshToken = await TokenUtils.hashToken(newRefreshToken);
     await user.save();
@@ -121,6 +112,7 @@ class AuthService {
     };
   }
 
+  // Logout
   static async logout(userId) {
     const user = await UserRepository.findByIdWithRefreshToken(userId);
 
@@ -134,7 +126,7 @@ class AuthService {
 
   // Get current user
   static async getCurrentUser(userId) {
-    const user = await UserRepository.findByIdWithRefreshToken(userId);
+    const user = await UserRepository.findById(userId);
 
     if (!user) {
       throw new AppError("User not found", 404);
@@ -144,7 +136,7 @@ class AuthService {
       id: user._id,
       name: user.name,
       email: user.email,
-      role : user.role
+      role: user.role,
     };
   }
 }

@@ -25,7 +25,7 @@ router.get(
 );
 
 // ==============================
-// OPTIMIZE CART
+// OPTIMIZE CART    
 // ==============================
 router.post(
   "/optimize-cart",  // Changed from /optimize-cart for consistency

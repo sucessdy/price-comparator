@@ -16,7 +16,7 @@ class UserRepository {
     });
 
     if (includePassword) {
-      query.select("+password +refreshToken");
+      query.select("+password");
     }
 
     return query;

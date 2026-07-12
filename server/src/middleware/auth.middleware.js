@@ -1,17 +1,21 @@
-const { AppError, UnauthorizedError } = require("../errors/AppError");
+const { UnauthorizedError } = require("../errors/AppError");
 const TokenUtils = require("../utils/tokenUtils");
 const userRepository = require("../repositories/userRepository");
-const authMiddleware =  async (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split("Bearer ")[1];
-    if (!token) {
-      throw new UnauthorizedError("Invalid token");
+    const authToken = req.headers.authorization;
+
+    if (!authToken) {
+      throw new UnauthorizedError("Authentication required");
     }
 
-    const decodedToken = TokenUtils.verifyToken(token);
-    if (!decodedToken) {
-      throw new UnauthorizedError("Invalid decoded token");
+    if (!authToken.startsWith("Bearer ")) {
+      throw new UnauthorizedError("Access denied. Invalid token format");
     }
+
+    const token = authToken.split(" ")[1];
+
+    const decodedToken = TokenUtils.verifyToken(token);
 
     const user = await userRepository.findById(decodedToken.id);
 
@@ -21,11 +25,18 @@ const authMiddleware =  async (req, res, next) => {
 
     req.user = {
       id: user._id,
-      role: user.role,
+      role: user.role, // so..  i should remove the role
     };
     next();
   } catch (err) {
-    throw new UnauthorizedError("Invalid or expired refresh token");
+  if (
+    err.name === "JsonWebTokenError" ||
+    err.name === "TokenExpiredError"
+  ) {
+    throw new UnauthorizedError("Invalid or expired access token");
   }
+
+  throw err;
+}
 };
 module.exports = authMiddleware;

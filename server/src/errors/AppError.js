@@ -37,4 +37,13 @@ class UnauthorizedError extends AppError {
   }
 }
 
-module.exports = { AppError, NotFoundError, ValidationError,ConflictError, UnauthorizedError };
+
+class  ForbiddenError extends    AppError{
+  constructor(message){
+    const forbidden = Array.isArray(message) ? message.map(m=> m.message ).join(' ') : message ; 
+
+    super (forbidden , 403 , "FORBIDDEN_ERROR" ) 
+  }
+}                                                                                 
+
+module.exports = { AppError, NotFoundError, ValidationError,ConflictError, UnauthorizedError,  ForbiddenError };

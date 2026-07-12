@@ -4,6 +4,7 @@ const asyncHandler = require("../errors/asyncHandler");
 const router = express.Router();
 const { registerSchema, loginSchema } = require("../validators/auth.validator");
 const AuthControllers = require("../controllers/authController");
+const authMiddleware = require("../middleware/auth.middleware");
 router.post(
   "/register",
   validate(registerSchema),

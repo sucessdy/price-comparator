@@ -5,38 +5,22 @@ const authMiddleware = async (req, res, next) => {
   try {
     const authToken = req.headers.authorization;
 
-    if (!authToken) {
-      throw new UnauthorizedError("Authentication required");
-    }
-
-    if (!authToken.startsWith("Bearer ")) {
-      throw new UnauthorizedError("Access denied. Invalid token format");
-    }
+    if (!authToken) throw new UnauthorizedError("Authentication required");
+    if (!authToken.startsWith("Bearer ")) throw new UnauthorizedError("Access denied. Invalid token format");
 
     const token = authToken.split(" ")[1];
-
     const decodedToken = TokenUtils.verifyToken(token);
-
     const user = await userRepository.findById(decodedToken.id);
 
-    if (!user) {
-      throw new UnauthorizedError("User not found");
-    }
+    if (!user) throw new UnauthorizedError("User not found");
 
-    req.user = {
-      id: user._id,
-      role: user.role, // so..  i should remove the role
-    };
+    req.user = { id: user._id, role: user.role };
     next();
   } catch (err) {
-  if (
-    err.name === "JsonWebTokenError" ||
-    err.name === "TokenExpiredError"
-  ) {
-    throw new UnauthorizedError("Invalid or expired access token");
+    if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+      return next(new UnauthorizedError("Invalid or expired access token"));
+    }
+    next(err); // pass to errorMiddleware, don't throw
   }
-
-  throw err;
-}
 };
 module.exports = authMiddleware;

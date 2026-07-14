@@ -1,18 +1,23 @@
-const { ValidationError } = require("../errors/AppError.js");
+const { ValidationError } = require("../errors/AppError");
 
 const validate = (schema) => {
   return (req, res, next) => {
-    const { error, value } = schema.validate(req.body);
+    console.log(`🔍 Validating ${req.method} ${req.path}`);
+    console.log("📦 Request body:", req.body);
+    
+    const { error, value } = schema.validate(req.body, {
+      abortEarly: false, // Show all validation errors
+      stripUnknown: true // Remove unknown fields
+    });
+    
     if (error) {
-      console.log(error.message, "error");
-    }
-    if (error) {
-      return next(new ValidationError(error.message));
+      const errorMessage = error.details.map(detail => detail.message).join(', ');
+      console.error("❌ Validation Error:", errorMessage);
+      return next(new ValidationError(errorMessage));
     }
 
     req.validatedData = value;
-    console.log("BODY:", req.body);
-    console.log("VALIDATED:", value);
+    console.log("✅ Validation passed for:", req.path);
     next();
   };
 };

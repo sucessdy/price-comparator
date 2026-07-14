@@ -11,7 +11,7 @@ class AppError extends Error {
 
 class NotFoundError extends AppError {
   constructor(resources) {
-    super(`${resources} not found `, 404 ,  "RESOURCE_NOT_FOUND");
+    super(`${resources} not found`, 404 ,  "RESOURCE_NOT_FOUND");
   }
 }
 
@@ -27,7 +27,7 @@ class ValidationError extends AppError {
 class ConflictError extends AppError{ 
   constructor(message){
     const confictMessage = Array.isArray(message) ? message.map(m=> m.message ).join(", ") : message; 
-    super(confictMessage, 409, "CONFICT_ERROR")
+    super(confictMessage, 409, "CONFLICT_ERROR")
   }
 }
 class UnauthorizedError extends AppError { 

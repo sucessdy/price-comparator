@@ -23,7 +23,12 @@ async function startServer() {
   try {
 
     await connectDB();
-
+ app.use((req, res, next) => {
+      console.log(`\n📨 ${req.method} ${req.url}`);
+      console.log("📦 Headers:", req.headers);
+      console.log("📦 Body:", req.body);
+      next();
+    });
     server = app.listen(PORT, () => {
       console.log(
         `🏠 Server running on port ${PORT}`

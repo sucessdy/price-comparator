@@ -9,37 +9,45 @@ const TokenUtils = require("../utils/tokenUtils");
 
 class AuthService {
   // Register
-  static async register({ name, email, password }) {
-    const existingUser = await UserRepository.findByEmail(email);
-
-    if (existingUser) {
-      throw new ConflictError("Email already registered");
-    }
-
-    const user = await UserRepository.create({
-      name,
-      email,
-      password,
-    });
-
-    const accessToken = TokenUtils.generateAccessToken(user._id);
-    const refreshToken = TokenUtils.generateRefreshToken(user._id);
-
-    const refreshTokenHash = await TokenUtils.hashToken(refreshToken);
-    user.refreshToken = refreshTokenHash;
-    await user.save();
-
-    return {
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-      accessToken,
-      refreshToken,
-    };
+static async register({ name, email, password }) {
+  console.log("📝 Registering user:", email);
+  
+  // ✅ Check if user already exists
+  const existingUser = await UserRepository.findByEmail(email);
+  
+  if (existingUser) {
+    console.log("❌ User already exists:", email);
+    throw new ConflictError("User with this email already exists");
   }
+  
+  console.log("✅ Creating user...");
+  const user = await UserRepository.create({
+    name,
+    email,
+    password,
+  });
+  
+  console.log("✅ User created with ID:", user._id);
+  
+  const accessToken = TokenUtils.generateAccessToken(user._id);
+  const refreshToken = TokenUtils.generateRefreshToken(user._id);
+  
+  console.log("🔑 Tokens generated");
+  
+  const refreshTokenHash = await TokenUtils.hashToken(refreshToken);
+  user.refreshToken = refreshTokenHash;
+  await user.save();
 
+  return {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
+    accessToken,
+    refreshToken,
+  };
+}
   // Login
   static async login({ email, password }) {
     const user = await UserRepository.findByEmail(email, true);

@@ -6,7 +6,7 @@ const cookieOptions = {
   secure: process.env.NODE_ENV === "production",
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000,
-  path: "/api/auth",
+  path: "/auth",
 };
 
 function setRefreshTokenCookie(res, token) {
@@ -18,7 +18,6 @@ class AuthControllers {
     const result = await authServices.register(req.body);
 
     setRefreshTokenCookie(res, result.refreshToken);
-
     sendResponse(res, {
       statusCode: 201,
       message: "User registered successfully",

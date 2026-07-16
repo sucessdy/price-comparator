@@ -7,6 +7,7 @@ import type { ProductComparison } from "../types/product";
 import Navbar from "../components/Navbar";
 import RecentSearches from "../components/RecentSearches";
 import OptimizeCartPage from "./OptimizeCartPage";
+import AssistantHero from "../components/assistant/AssistantHero";
 
 export default function HomePage() {
   const [error , setError] = useState("")
@@ -95,15 +96,17 @@ const handleSearch = async () => {
 
   return (
     <main className="min-h-screen  from-slate-900 via-purple-900 to-slate-900">
-      <Navbar />
-      <Hero />
-
+      {/* <Navbar /> */}
+      <AssistantHero />
+      
+      {/* <Hero /> */}
+{/* 
       <SearchBar
         value={productName}
         onChange={setProductName}
         onSearch={handleSearch}
         loading={loading}
-      />
+      /> */}
 
       {loading ? (
         <div className="flex justify-center items-center py-20">
@@ -117,7 +120,7 @@ const handleSearch = async () => {
       )}
       {error && <div className="text-red-400 text-center mt-6">{error}</div>}
 
-      <OptimizeCartPage/>
+      {/* <OptimizeCartPage/> */}
     </main>
   );
 }

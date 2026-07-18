@@ -1,12 +1,14 @@
-import HomePage from "./pages/HomePage"
+import { UserProvider } from "./context/userProvider";
+import HomePage from "./pages/HomePage";
 
 const App = () => {
   return (
     <div>
-
-      <HomePage/>
+      <UserProvider>
+        <HomePage />
+      </UserProvider>
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;

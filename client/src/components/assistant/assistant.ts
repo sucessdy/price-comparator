@@ -1,14 +1,15 @@
-export interface Message {
+export interface  Message  {
   id: string | number;
  text: string;
   sender: "user" | "assistant";
   timestamp: Date;
 }
 
-export interface suggestPrompt {
+export interface SuggestPrompt {
+  _id?: number;
   icon: string;
   text: string;
-  category: string;
+  category?: string;
 }
 export interface ChatInputProps {
   input: string;
@@ -18,8 +19,8 @@ export interface ChatInputProps {
  placeholder?: string;
 }
 export  interface SuggestedPromptsProps { 
-
+_id : number;  
     onSelect : (prompt : string) =>void; 
-    prompts ? : suggestPrompt[] ;
+    prompts ? : SuggestPrompt[] ;
 
  }

@@ -1,5 +1,3 @@
-
-
 interface SendMessageResponse {
   message: string;
   intent?: string;
@@ -31,6 +29,5 @@ export async function sendMessage(
     priority: "best_value",
   };
 
-  return response ; 
-} 
-
+  return response;
+}

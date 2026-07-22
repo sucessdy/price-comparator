@@ -62,6 +62,7 @@ const [messages, setMessages] = useState<Message[]>(() => {
         text: response.message,
         sender: 'assistant',
         timestamp: new Date(),
+      
         chips: chips.length > 0 ? chips : undefined
       };
 
@@ -94,7 +95,7 @@ const [messages, setMessages] = useState<Message[]>(() => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };                   
 
   const handleBack = () => {
     setIsChatActive(false);

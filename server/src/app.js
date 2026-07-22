@@ -18,7 +18,7 @@ app.use(cors());
 
 app.use("/api", ProductRoutes); 
 app.use("/auth",  userRoutes)
-// app.use("/auth/api", userRouters)
+
 app.use(errorMiddleware);
 
 module.exports = app;

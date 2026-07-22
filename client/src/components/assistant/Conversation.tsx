@@ -1,4 +1,3 @@
-// src/components/assistant/Conversation.tsx
 import React from 'react';
 import MessageBubble from './MessageBubble';
 import LoadingBubble from './LoadingBubble';

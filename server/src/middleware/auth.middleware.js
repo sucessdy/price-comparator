@@ -20,7 +20,7 @@ const authMiddleware = async (req, res, next) => {
     if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
       return next(new UnauthorizedError("Invalid or expired access token"));
     }
-    next(err); // pass to errorMiddleware, don't throw
+    next(err); 
   }
 };
 module.exports = authMiddleware;

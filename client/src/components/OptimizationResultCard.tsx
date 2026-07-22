@@ -207,7 +207,6 @@ export default function OptimizationResultCard({ result, cartItems }: Props) {
         </div>
       </div>
 
-      {/* CARD 7: WHY */}
       <div className="bg-blue-500/10 backdrop-blur-lg rounded-xl p-4 border border-blue-500/30">
         <div className="flex items-start gap-3">
           <CheckCircle
@@ -224,7 +223,6 @@ export default function OptimizationResultCard({ result, cartItems }: Props) {
         </div>
       </div>
 
-      {/* Missing Products */}
       {hasMissingProducts && (
         <div className="bg-red-500/20 backdrop-blur-lg rounded-xl p-4 border border-red-500/30">
           <div className="flex items-start gap-3">

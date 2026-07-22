@@ -233,7 +233,7 @@ const OptimizeCartPage = () => {
         )}
         
         {result && (
-          <OptimizationResultCard result={result} cartItems={products} />
+          <OptimizationResultCard result={result} cartItems={products} savings={0} />
         )}
       </div>
     </main>

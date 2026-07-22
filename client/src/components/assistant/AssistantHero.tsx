@@ -1,118 +1,146 @@
 // src/components/assistant/AssistantHero.tsx
-import React, { useState } from "react";
-import ChatInput from "./ChatInput";
-import SuggestedPrompts from "./SuggestedPrompts";
-import { useUser } from "../../context/useUser";
-import { type Message } from "./assistant";
+import React, { useState } from 'react';
+import LandingPage from './LandingPage';
+import ChatPage from './ChatPage';
+import ChatInput from './ChatInput';
+import { useUser } from '../../context/useUser';
+import { sendMessage } from '../../services/assistant.service';
+import { type  Message } from './assistant';
 
 const AssistantHero: React.FC = () => {
-  const { user } = useUser();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState<string>("");
+  const { user, updateUser } = useUser();
+  const [input, setInput] = useState<string>('');
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isChatActive, setIsChatActive] = useState<boolean>(false);
 
-  const handleSend = async (): Promise<void> => {
-    if (!input.trim() || isLoading) return;
 
-    // Add user message
+const [messages, setMessages] = useState<Message[]>(() => {
+  try {
+    const saved = localStorage.getItem("chatConversation");
+    const parsed: unknown = saved ? JSON.parse(saved) : [];
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+});
+
+// const [isChatActive, setIsChatActive] = useState(
+//   () => messages.length > 0,
+// );
+
+  const handleSend = async (text: string): Promise<void> => {
+    if (!text.trim() || isLoading) return;
+
+    if (!isChatActive) {
+      setIsChatActive(true);
+    }
+
     const userMessage: Message = {
       id: Date.now(),
-      text: input,
-      sender: "user",
+      text: text.trim(),
+      sender: 'user',
       timestamp: new Date(),
+      status: 'sending'
     };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
     setIsLoading(true);
 
-    // Simulate API call
     try {
-      // Mock assistant response
-      const mockResponse = await new Promise<string>((resolve) => {
-        setTimeout(() => {
-          const budget = user.preferences.budget || 800;
-          const meal = input.toLowerCase().includes("dinner")
-            ? "Dinner"
-            : "General";
-          resolve(
-            `I understood:\nBudget: ₹${budget}\nMeal: ${meal}\nPriority: Best Value\n\nI'm finding the best shopping plan for you...`,
-          );
-        }, 800);
-      });
+      const response = await sendMessage(text, user.name, user.preferences.budget);
+
+      const chips: string[] = [];
+      if (response.budget) chips.push(`₹${response.budget}`);
+      if (response.priority) chips.push(response.priority);
+      if (response.intent) chips.push(response.intent);
 
       const assistantMessage: Message = {
         id: Date.now() + 1,
-        text: mockResponse,
-        sender: "assistant",
+        text: response.message,
+        sender: 'assistant',
         timestamp: new Date(),
+        chips: chips.length > 0 ? chips : undefined
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      if (response.budget && !user.preferences.budget) {
+        updateUser({
+          preferences: { ...user.preferences, budget: response.budget }
+        });
+      }
+
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { ...updated[updated.length - 1], status: 'sent' };
+        return [...updated, assistantMessage];
+      });
     } catch (error) {
-      console.error("Error getting assistant response:", error);
+      console.error('Error:', error);
+      
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        text: 'Sorry, I encountered an error. Please try again.',
+        sender: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { ...updated[updated.length - 1], status: 'error' };
+        return [...updated, errorMessage];
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleBack = () => {
+    setIsChatActive(false);
+    setMessages([]);
+    localStorage.removeItem('chatConversation');
+  };
+
+  const handleClear = () => {
+    setMessages([]);
+    localStorage.removeItem('chatConversation');
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">
-          👋 Hi {user.name}
-        </h1>
-        <p className="text-xl text-gray-600">
-          {user.preferences.budget
-            ? `What do you need today? (Budget: ₹${user.preferences.budget})`
-            : "What do you need today?"}
-        </p>
+    <div className="min-h-[calc(100vh-80px)] bg-[#0A0A0F] relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#6C63FF] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-glow"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#FF6B9D] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-[#6C63FF] to-[#FF6B9D] rounded-full mix-blend-multiply filter blur-3xl opacity-5"></div>
       </div>
 
-      {/* Chat Messages */}
-      <div className="mb-6 space-y-4 min-h-50">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`p-4 rounded-lg ${
-              msg.sender === "user"
-                ? "bg-blue-500 text-white ml-auto max-w-[80%]"
-                : "bg-gray-100 text-gray-800 max-w-[80%]"
-            }`}
-          >
-            <div className="whitespace-pre-line">{msg.text}</div>
-            {msg.timestamp && (
-              <div className="text-xs opacity-50 mt-1">
-                {msg.timestamp.toLocaleTimeString()}
-              </div>
-            )}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="bg-gray-100 text-gray-800 p-4 rounded-lg max-w-[80%]">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
-            </div>
-          </div>
+      <div className="relative z-10">
+        {!isChatActive ? (
+          <LandingPage
+            onSend={handleSend}
+            setInput={setInput}
+            input={input}
+            isLoading={isLoading}
+          />
+        ) : (
+          <>
+            <ChatPage
+              messages={messages}
+              isLoading={isLoading}
+              onBack={handleBack}
+              onClear={handleClear}
+            />
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              onSend={() => handleSend(input)}
+              isLoading={isLoading}
+              placeholder="Ask about groceries..."
+            />
+          </>
         )}
       </div>
-
-      {/* Input Area */}
-      <ChatInput
-        input={input}
-        setInput={setInput}
-        onSend={handleSend}
-        loading={isLoading}
-        placeholder={`I need groceries for dinner under ₹${user.preferences.budget || 800}...`}
-      />
-
-      {/* Suggested Prompts */}
-      {messages.length === 0 && (
-        <SuggestedPrompts _id={0} onSelect={setInput} />
-      )}
     </div>
   );
 };

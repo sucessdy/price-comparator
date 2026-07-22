@@ -32,7 +32,6 @@ export default function AlternativesComparison({
 
       {isExpanded && (
         <div className="mt-3 space-y-2">
-          {/* Recommended */}
           <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Trophy size={16} className="text-yellow-400" />
@@ -51,7 +50,6 @@ export default function AlternativesComparison({
             </div>
           </div>
 
-          {/* Alternatives */}
 
           {otherOptions.slice(0, 5).map((alt) => {
             const difference = alt.totalCost - currentBest.totalCost;

@@ -13,7 +13,8 @@ const api = axios.create({
 
 export const compareProduct = async (product: string): Promise<ApiResponse<ProductComparison>> => {
   const response = await api.get<ApiResponse<ProductComparison>>(
-    `/compare?product=${product}`
+    "/compare",
+    { params: { product } },
   );
   return response.data;
 };

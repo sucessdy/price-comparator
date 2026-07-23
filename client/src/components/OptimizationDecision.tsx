@@ -11,16 +11,14 @@ export default function OptimizationDecision({ result, cartItems }: Props) {
   const [showDetails, setShowDetails] = useState(false);
   const isSplitCart = result.recommended.strategy === "split-cart";
   
-  // Calculate alternative (if split vs single)
   const hasAlternative = result.savings > 0;
   const alternativeCost = isSplitCart 
-    ? result.recommended.totalCost + result.savings  // Single platform would cost more
-    : result.recommended.totalCost + result.savings; // Split cart would cost more
+    ? result.recommended.totalCost + result.savings  
+    : result.recommended.totalCost + result.savings;
 
   return (
     <div className="mt-8 animate-fade-in-up space-y-4">
       
-      {/* INPUT: Your Cart - Compact */}
       <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 border border-white/10">
         <div className="flex items-center gap-2 mb-2">
           <ShoppingBag size={16} className="text-purple-400" />
@@ -35,7 +33,6 @@ export default function OptimizationDecision({ result, cartItems }: Props) {
         </div>
       </div>
 
-      {/* DECISION: Best Option - BIG and FIRST */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 shadow-2xl">
         <div className="flex items-center gap-2 mb-3">
           <Trophy size={24} className="text-yellow-300" />
@@ -53,7 +50,6 @@ export default function OptimizationDecision({ result, cartItems }: Props) {
         <p className="text-purple-200 text-sm mt-2">Total including all fees</p>
       </div>
 
-      {/* WHY: Simple Breakdown */}
       <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
         <p className="text-slate-400 text-xs mb-2">Price Breakdown</p>
         <div className="space-y-1 text-sm">
@@ -79,7 +75,6 @@ export default function OptimizationDecision({ result, cartItems }: Props) {
         </div>
       </div>
 
-      {/* ALTERNATIVE: Only if meaningful savings */}
       {hasAlternative && result.savings > result.recommended.totalCost * 0.01 && (
         <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 border border-white/10">
           <div className="flex items-center gap-2 mb-2">
@@ -99,7 +94,6 @@ export default function OptimizationDecision({ result, cartItems }: Props) {
         </div>
       )}
 
-      {/* PRODUCT DETAILS: Expandable */}
       <button
         onClick={() => setShowDetails(!showDetails)}
         className="w-full bg-white/5 backdrop-blur-lg rounded-xl p-3 border border-white/10 flex justify-between items-center hover:bg-white/10 transition-colors"

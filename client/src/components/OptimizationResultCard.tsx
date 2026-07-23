@@ -196,7 +196,7 @@ export default function OptimizationResultCard({ result, cartItems }: Props) {
             <p className="text-white font-semibold capitalize text-sm">
               {isSplitCart
                 ? "Smart Split Cart"
-                : `Single Platform: ${result.recommended.platform}`}
+                : `Single Platform: ${result.recommended?.platform}`}
             </p>
             {!isSplitCart && (
               <span className="text-xs text-green-400">
@@ -216,7 +216,7 @@ export default function OptimizationResultCard({ result, cartItems }: Props) {
           <p className="text-slate-300 text-sm">
             {isSplitCart
               ? "Buying from different platforms saves you money. Each product is purchased from its cheapest available source."
-              : `All products are available on ${result.recommended.platform} at the best combined price. Buying together saves on delivery and hassle.`}
+              : `All products are available on ${result.recommended?.platform} at the best combined price. Buying together saves on delivery and hassle.`}
             {hasSavings &&
               ` You save ₹${result.savings} compared to other options.`}
           </p>

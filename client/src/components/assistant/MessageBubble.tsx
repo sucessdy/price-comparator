@@ -21,7 +21,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message}) => {
       <div className={`max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}>
         {!isUser && (
           <div className="flex items-center gap-2 mb-1.5">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#8B83FF] flex items-center justify-center text-xs text-white font-medium">
+            <div className="w-6 h-6 rounded-full bg-linear-to-br from-[#6C63FF] to-[#8B83FF] flex items-center justify-center text-xs text-white font-medium">
               AI
             </div>
             <span className="text-xs text-[rgba(255,255,255,0.4)] font-medium">
@@ -59,14 +59,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message}) => {
             </div>
           )}
         </div>
-
-
-       
         {message.timestamp && (
        
              <div className={`text-xs text-[rgba(255,255,255,0.3)] mt-1 ${isUser ? 'text-right' : ''}`}>
            
-             {message.timestamp.toString()}
+             {message.timestamp.toLocaleTimeString().toString()} 
             {message.status === 'sending' && (
               <span className="ml-2 text-[#8B83FF]">● Sending...</span>
             )}

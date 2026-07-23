@@ -1,4 +1,3 @@
-// src/components/assistant/AssistantHero.tsx
 import React, { useState } from 'react';
 import LandingPage from './LandingPage';
 import ChatPage from './ChatPage';
@@ -26,10 +25,6 @@ const [messages, setMessages] = useState<Message[]>(() => {
   }
 });
 
-// const [isChatActive, setIsChatActive] = useState(
-//   () => messages.length > 0,
-// );
-
   const handleSend = async (text: string): Promise<void> => {
     if (!text.trim() || isLoading) return;
 
@@ -50,7 +45,7 @@ const [messages, setMessages] = useState<Message[]>(() => {
     setIsLoading(true);
 
     try {
-      const response = await sendMessage(text, user.name, user.preferences.budget);
+      const response = await sendMessage(text);
 
       const chips: string[] = [];
       if (response.budget) chips.push(`₹${response.budget}`);
@@ -65,7 +60,6 @@ const [messages, setMessages] = useState<Message[]>(() => {
       
         chips: chips.length > 0 ? chips : undefined
       };
-
       if (response.budget && !user.preferences.budget) {
         updateUser({
           preferences: { ...user.preferences, budget: response.budget }
@@ -79,10 +73,13 @@ const [messages, setMessages] = useState<Message[]>(() => {
       });
     } catch (error) {
       console.error('Error:', error);
+      const message = error instanceof Error
+        ? error.message
+        : 'Sorry, I encountered an error. Please try again.';
       
       const errorMessage: Message = {
         id: Date.now() + 1,
-        text: 'Sorry, I encountered an error. Please try again.',
+        text: message,
         sender: 'assistant',
         timestamp: new Date()
       };
@@ -113,7 +110,7 @@ const [messages, setMessages] = useState<Message[]>(() => {
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#6C63FF] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-glow"></div>
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#FF6B9D] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-[#6C63FF] to-[#FF6B9D] rounded-full mix-blend-multiply filter blur-3xl opacity-5"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-gradient-to-r from-[#6C63FF] to-[#FF6B9D] rounded-full mix-blend-multiply filter blur-3xl opacity-5"></div>
       </div>
 
       <div className="relative z-10">

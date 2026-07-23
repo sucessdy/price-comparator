@@ -38,7 +38,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             onKeyDown={handleKeyPress}
             placeholder={placeholder}
             disabled={isLoading}
-            className="w-full resize-none border-0 focus:ring-0 p-2 text-gray-700 placeholder-gray-400 min-h-15 max-h-30 outline-none text-[15px]"
+            className="w-full resize-none border-0 focus:ring-0 p-2 text-gray-100 placeholder-gray-400 min-h-15 max-h-30 outline-none text-[15px]"
             rows={1}
           />
         </div>
@@ -56,7 +56,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
             </button>
           )}
 
-          {/* Send Button */}
           <button
             onClick={onSend}
             disabled={!input.trim() ||   isLoading}

@@ -11,34 +11,33 @@ interface LandingPageProps {
 const quickPrompts: SuggestPrompt[] = [
   { 
     icon: '🍝', 
-    text: 'Dinner tonight',
-    description: 'Quick meal ideas',
+    text: 'Compare milk',
+    description: 'See store prices',
   },
   { 
     icon: '🥬', 
-    text: 'Weekly groceries',
-    description: 'Plan your week',
+    text: 'milk, bread, eggs',
+    description: 'Optimize a cart',
   },
   { 
     icon: '🥛', 
-    text: 'Daily essentials',
-    description: 'Milk, bread, eggs',
+    text: '2 milk, bread',
+    description: 'Include quantities',
   },
   { 
     icon: '💪', 
-    text: 'High protein',
-    description: 'Fitness focused',
+  text: 'Compare bread',
+    description: 'Find the best price',
   },
   { 
     icon: '👶', 
-    text: 'Baby care',
-    description: 'Gentle products',
+    text: 'milk and eggs',
+    description: 'Plan two products',
   },
   { 
     icon: '🎉', 
-    text: 'Party planning',
-    description: 'Snacks & drinks',
-  },
+  text: 'Compare eggs',
+    description: 'View live prices',}
 ];
 
 const LandingPage: React.FC<LandingPageProps> = ({

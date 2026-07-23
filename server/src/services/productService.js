@@ -80,19 +80,20 @@ exports.compareProduct = async (productName) => {
 // ======================================================
 
 exports.optimizeCart = async (products) => {
-  // Normalize products
-  const normalizedProducts = products.map((product) => {
-    if (typeof product === "string") {
-      return {
-        name: product.trim().toLowerCase(),
-        quantity: 1,
-      };
-    }
-    return {
-      name: product.name.trim().toLowerCase(),
-      quantity: product.quantity || 1,
-    };
+  // Normalize duplicate entries before looking up products or applying fees.
+  const quantitiesByName = new Map();
+  products.forEach((product) => {
+    const name = (typeof product === "string" ? product : product.name)
+      .trim()
+      .toLowerCase();
+    const quantity = typeof product === "string" ? 1 : product.quantity || 1;
+    quantitiesByName.set(name, (quantitiesByName.get(name) || 0) + quantity);
   });
+
+  const normalizedProducts = Array.from(quantitiesByName, ([name, quantity]) => ({
+    name,
+    quantity,
+  }));
 
   const names = normalizedProducts.map((p) => p.name);
 
@@ -116,8 +117,7 @@ exports.optimizeCart = async (products) => {
   // ======================================================
   const splitItems = {};
   const missingProducts = [];
-  let splitTotalProductCost = 0;
-  let splitTotalFinalCost = 0;
+  const splitOrdersByPlatform = {};
 
   for (const cartItem of normalizedProducts) {
     const productName = cartItem.name;
@@ -139,29 +139,44 @@ exports.optimizeCart = async (products) => {
 
     const productCost = cheapestProduct.price * quantity;
     const platform = cheapestProduct.platform;
-    const config = platformConfig[platform];
-    let finalCost = productCost;
-    let feeBreakdown = null;
-
-    if (config) {
-      const calculation = calculateFinalCost(productCost, config);
-      finalCost = calculation.total;
-      feeBreakdown = calculation.breakdown;
-    }
-
     splitItems[productName] = {
       available: true,
       platform: platform,
       price: cheapestProduct.price,
       quantity: quantity,
       productCost: productCost,
-      finalCost: finalCost,
-      feeBreakdown: feeBreakdown,
+      // Fees are applied to the platform order below, never to each item.
+      finalCost: productCost,
     };
 
-    splitTotalProductCost += productCost;
-    splitTotalFinalCost += finalCost;
+    if (!splitOrdersByPlatform[platform]) {
+      splitOrdersByPlatform[platform] = { productCost: 0 };
+    }
+    splitOrdersByPlatform[platform].productCost += productCost;
   }
+
+  const splitOrderTotals = Object.entries(splitOrdersByPlatform).map(
+    ([platform, order]) => {
+      const calculation = platformConfig[platform]
+        ? calculateFinalCost(order.productCost, platformConfig[platform])
+        : { total: order.productCost, breakdown: null };
+
+      return {
+        platform,
+        productCost: order.productCost,
+        totalCost: calculation.total,
+        feeBreakdown: calculation.breakdown,
+      };
+    }
+  );
+  const splitTotalProductCost = splitOrderTotals.reduce(
+    (total, order) => total + order.productCost,
+    0
+  );
+  const splitTotalFinalCost = splitOrderTotals.reduce(
+    (total, order) => total + order.totalCost,
+    0
+  );
 
   // ======================================================
   // SINGLE PLATFORM STRATEGY
@@ -301,9 +316,8 @@ exports.optimizeCart = async (products) => {
           platform: details.platform,
           quantity: details.quantity,
           price: details.price,
-          totalPrice: details.finalCost,
+          totalPrice: details.productCost,
           productCost: details.productCost,
-          fees: details.feeBreakdown,
         });
       }
     }
@@ -318,7 +332,7 @@ alternatives.sort((a, b) => a.totalCost - b.totalCost);
     alternatives,
     summary: {
       totalItems: normalizedProducts.reduce((sum, p) => sum + p.quantity, 0),
-      uniqueProducts: normalizedProducts.length,
+      uniqueProducts: quantitiesByName.size,
       platformsConsidered: Object.keys(platformMap).length,
     },
   };

@@ -146,7 +146,7 @@ export interface PlatformAlternative {
 // ======================================================
 
 export interface OptimizeCartResponse {
-  recommended: CartRecommendation;
+  recommended: CartRecommendation | null;
   savings: number;
   missingProducts: string[];
   shoppingPlan: ShoppingPlanItem[];

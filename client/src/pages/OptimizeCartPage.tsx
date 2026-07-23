@@ -9,6 +9,7 @@ const OptimizeCartPage = () => {
   const [products, setProducts] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<OptimizeCartResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAddProduct = (): void => {
     if (!input.trim()) return;
@@ -30,11 +31,13 @@ const OptimizeCartPage = () => {
       setProducts([...products, { name: trimmed, quantity: 1 }]);
     }
     setInput("");
+    setError(null);
   };
 
   const handleRemoveProduct = (productToRemove: string): void => {
     setProducts(products.filter((product) => product.name !== productToRemove));
     setResult(null);
+    setError(null);
   };
 
   const increaseQuantity = (productName: string): void => {
@@ -46,6 +49,7 @@ const OptimizeCartPage = () => {
       ),
     );
     setResult(null);
+    setError(null);
   };
 
   const decreaseQuantity = (productName: string): void => {
@@ -59,6 +63,7 @@ const OptimizeCartPage = () => {
         .filter((product) => product.quantity > 0),
     );
     setResult(null);
+    setError(null);
   };
 
   const totalItems = products.reduce(
@@ -70,19 +75,16 @@ const OptimizeCartPage = () => {
     if (products.length === 0) return;
 
     setLoading(true);
+    setError(null);
     try {
       const response = await optimizeCart(products);
 
       console.log(response);
 
-      // Handle both response structures
-      const optimizationData = response.data;
-
-      if (optimizationData && "recommended" in optimizationData) {
-        setResult(optimizationData as OptimizeCartResponse);
-      }
+      setResult(response.data);
     } catch (err) {
       console.error("Optimization failed:", err);
+      setError("Unable to optimize your cart right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -235,6 +237,7 @@ const OptimizeCartPage = () => {
         {result && (
           <OptimizationResultCard result={result} cartItems={products} savings={0} />
         )}
+        {error && <p className="mt-4 text-center text-red-300">{error}</p>}
       </div>
     </main>
   );

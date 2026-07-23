@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import LandingPage from './LandingPage';
 import ChatPage from './ChatPage';
 import ChatInput from './ChatInput';
@@ -6,24 +6,38 @@ import { useUser } from '../../context/useUser';
 import { sendMessage } from '../../services/assistant.service';
 import { type  Message } from './assistant';
 
-const AssistantHero: React.FC = () => {
-  const { user, updateUser } = useUser();
-  const [input, setInput] = useState<string>('');
-
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isChatActive, setIsChatActive] = useState<boolean>(false);
-
-
-const [messages, setMessages] = useState<Message[]>(() => {
+const loadSavedMessages = (): Message[] => {
   try {
     const saved = localStorage.getItem("chatConversation");
     const parsed: unknown = saved ? JSON.parse(saved) : [];
 
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.map((message) => ({
+      ...message,
+      timestamp: message.timestamp ? new Date(message.timestamp) : undefined,
+      status: message.status === "sending" ? "error" : message.status,
+    }));
   } catch {
     return [];
   }
-});
+};
+
+const AssistantHero: React.FC = () => {
+  const { user, updateUser } = useUser();
+  const [input, setInput] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>(loadSavedMessages);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isChatActive, setIsChatActive] = useState<boolean>(() => loadSavedMessages().length > 0);
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      localStorage.removeItem("chatConversation");
+      return;
+    }
+
+    localStorage.setItem("chatConversation", JSON.stringify(messages));
+  }, [messages]);
 
   const handleSend = async (text: string): Promise<void> => {
     if (!text.trim() || isLoading) return;

@@ -9,6 +9,11 @@ type Props = {
 
 export default function OptimizationDecision({ result, cartItems }: Props) {
   const [showDetails, setShowDetails] = useState(false);
+
+  if (!result.recommended) {
+    return null;
+  }
+
   const isSplitCart = result.recommended.strategy === "split-cart";
   
   const hasAlternative = result.savings > 0;
@@ -63,7 +68,7 @@ export default function OptimizationDecision({ result, cartItems }: Props) {
               <span className="text-white">₹{result.recommended.feeBreakdown.deliveryFee}</span>
             </div>
           )}
-          {result.recommended.feeBreakdown?.deliveryFee &&  (
+          {result.recommended.feeBreakdown?.platformFee &&  (
             <div className="flex justify-between">
               <span className="text-slate-300">Platform Fee</span>
               <span className="text-white">₹{result.recommended.feeBreakdown.platformFee}</span>

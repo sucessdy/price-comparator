@@ -15,6 +15,23 @@ type Props = {
 };
 
 export default function OptimizationResultCard({ result, cartItems }: Props) {
+  if (!result.recommended) {
+    return (
+      <div className="mt-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-center">
+        <AlertCircle className="mx-auto mb-3 text-red-300" size={28} />
+        <h3 className="text-lg font-semibold text-white">We couldn’t build a complete shopping plan</h3>
+        <p className="mt-2 text-sm text-slate-300">
+          Remove or replace the unavailable products and try again.
+        </p>
+        {result.missingProducts.length > 0 && (
+          <p className="mt-3 text-sm text-red-200">
+            Not found: {result.missingProducts.join(", ")}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   const isSplitCart = result.recommended.strategy === "split-cart";
   const hasSavings = result.savings > 0;
   const hasMissingProducts = result.missingProducts?.length > 0;
@@ -143,7 +160,7 @@ export default function OptimizationResultCard({ result, cartItems }: Props) {
                   </div>
                   <div className="text-right">
                     <p className="text-yellow-300/80 text-xs">
-                      Compared to next best option
+                      Compared to the alternative shopping strategy
                     </p>
                     <p className="text-green-400 text-sm">🎉 Great deal!</p>
                   </div>

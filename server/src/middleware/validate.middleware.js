@@ -6,8 +6,8 @@ const validate = (schema) => {
     console.log("📦 Request body:", req.body);
     
     const { error, value } = schema.validate(req.body, {
-      abortEarly: false, // Show all validation errors
-      stripUnknown: true // Remove unknown fields
+      abortEarly: false, 
+      stripUnknown: true 
     });
     
     if (error) {

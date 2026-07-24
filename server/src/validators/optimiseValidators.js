@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-// Schema for cart optimization
+// Schema for cart   optimization
 const optimiseCartSchema = Joi.object({
   products: Joi.array()
     .items(

@@ -1,6 +1,6 @@
 // src/components/assistant/ChatInput.tsx
 import React, { useRef, useEffect } from 'react';
-import { type ChatInputProps } from './assistant';;
+import { type ChatInputProps } from './assistant.types';;
 
 const ChatInput: React.FC<ChatInputProps> = ({
   input,
@@ -59,7 +59,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <button
             onClick={onSend}
             disabled={!input.trim() ||   isLoading}
-            className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg"
+            className="px-6 py-2.5 bg-linear-to-r from-blue-500 to-blue-600 text-white font-medium rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg"
           >
             {  isLoading ? (
               <>

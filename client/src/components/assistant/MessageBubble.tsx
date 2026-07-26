@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { type Message } from './assistant';
+import { type Message } from './assistant.types';
 
 
 

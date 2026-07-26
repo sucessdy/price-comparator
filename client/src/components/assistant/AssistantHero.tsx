@@ -4,8 +4,7 @@ import ChatPage from './ChatPage';
 import ChatInput from './ChatInput';
 import { useUser } from '../../context/useUser';
 import { sendMessage } from '../../services/assistant.service';
-import { type  Message } from './assistant';
-
+import { type  Message } from './assistant.types';
 const loadSavedMessages = (): Message[] => {
   try {
     const saved = localStorage.getItem("chatConversation");

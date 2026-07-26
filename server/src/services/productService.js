@@ -1,7 +1,7 @@
 const productRepository = require("../repositories/productRepository");
 const platformConfig = require("../config/platformConfig");
 const calculateFinalCost = require("../utils/calculateFinalCost");
-const { NotFoundError } = require("../errors/AppError");
+const { NotFoundError, ValidationError } = require("../errors/AppError");
 
 // ======================================================
 // ADD OR UPDATE PRODUCT
@@ -42,14 +42,14 @@ exports.addOrUpdateProduct = async ({ name, price, platform }) => {
 // ======================================================
 
 exports.compareProduct = async (productName) => {
-  if (!productName || typeof productName !== "string") {
-    throw new Error("Invalid product name");
+  if (!productName ||  !productName.trim()) {
+    throw new ValidationError("Product name is required");
   }
 
   const products = await productRepository.findByName(productName);
 
-  if (products.length === 0) {
-    throw new NotFoundError("Product");
+  if (!products.length ) {
+    throw new NotFoundError(`Product "${productName}" not found.`);
   }
 
   const prices = {};

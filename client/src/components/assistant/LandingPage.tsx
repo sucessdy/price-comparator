@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { type SuggestPrompt  } from './assistant';
+import { type SuggestPrompt  } from './assistant.types';
 
 interface LandingPageProps {
   onSend: (message: string) => void;

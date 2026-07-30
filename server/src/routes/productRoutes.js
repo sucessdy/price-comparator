@@ -5,7 +5,7 @@ const { optimiseCartSchema } = require("../validators/optimiseValidators");
 const { productSchema } = require("../validators/ProductValidators");
 const productController = require("../controllers/productController");
 const validate = require("../middleware/validate.middleware");
-const asyncHandler = require("../errors/asyncHandler");
+const asyncHandler = require("../utils/asyncHandler");
 
 // ==============================
 // ADD/UPDATE PRODUCT

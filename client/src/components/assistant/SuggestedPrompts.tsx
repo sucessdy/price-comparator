@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { type SuggestedPromptsProps, type SuggestPrompt } from './assistant';
+import { type SuggestedPromptsProps, type SuggestPrompt } from './assistant.types';
 
 const defaultPrompts: SuggestPrompt[] = [
   { 

@@ -244,3 +244,37 @@ The ultimate goal is not to show users more information.
 The ultimate goal is to make the best decision feel obvious.
 
 
+
+client/
+src/
+├── components/
+│   └── assistant/
+│       ├── AssistantPage.tsx          ← Main container
+│       ├── AssistantHero.tsx          ← Your existing main component
+│       ├── LandingPage.tsx            ← Empty state
+│       ├── ChatPage.tsx               ← Message list
+│       ├── ChatInput.tsx              ← Input field
+│       ├── Conversation.tsx           ← Message container
+│       ├── MessageBubble.tsx          ← ROUTER - decides which card to show
+│       ├── LoadingBubble.tsx          ← Loading animation
+│       ├── SuggestedPrompts.tsx       ← Quick prompts
+│       ├── assistant.types.ts         ← Types
+│       │
+│       └── cards/                      ← NEW FOLDER
+│           ├── index.ts               ← Export all cards
+│           ├── CompareCard.tsx        ← NEW - Product comparison
+│           ├── ShoppingPlanCard.tsx   ← NEW - Cart optimization
+│           ├── RecommendationCard.tsx ← NEW - Product recommendations
+│           └── TextCard.tsx           ← NEW - Plain text fallback
+│
+├── hooks/
+│   └── useAssistant.ts                ← Updated to use createAssistantMessage
+│
+├── services/
+│   └── assistant.service.ts           ← Updated to return intent + data
+│
+├── utils/
+│   └── createAssistantMessage.ts      ← NEW - Pure function
+│
+└── context/
+    └── useUser.ts                     ← Existing 

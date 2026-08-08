@@ -5,7 +5,12 @@ export interface Message {
   timestamp?: Date;
   status?: "sending" | "sent" | "error";
   chips?: string[];
-  type?: "text" | "shopping-plan" | "comparison" | "recommendation";
+   intent?: IntentType;
+ type?: MessageType;
+
+
+  data?: unknown; 
+context?: Record<string, unknown>; 
 }
 
 export interface SuggestPrompt {
@@ -17,14 +22,15 @@ export interface SuggestPrompt {
 }
 export interface ChatInputProps {
   input: string;
-  setInput: (value: string) => void;
+  onInputChange: (value: string) => void;
   onSend: () => void;
-   isLoading: boolean;
+  isLoading: boolean;
   placeholder?: string;
   onVoiceInput?: () => void;
 }
+
 export interface SuggestedPromptsProps {
-  _id: number;
+  // _id: number;
   onSelect: (prompt: string) => void;
   prompts?: SuggestPrompt[];
 }
@@ -38,4 +44,25 @@ export interface Conversation {
   updatedAt: Date;
   budget?: number;
 }
+// types/assistant.ts
 
+export const INTENT_TYPES = {
+  COMPARE: "COMPARE",
+  OPTIMIZE_CART: "OPTIMIZE_CART",
+  SHOPPING_NEED: "SHOPPING_NEED",
+  GENERAL: "GENERAL",
+} as const;
+
+export type IntentType = typeof INTENT_TYPES[keyof typeof INTENT_TYPES];
+
+
+
+export const MESSAGE_TYPES = {
+  TEXT: "text",
+  COMPARISON: "comparison",
+  SHOPPING_PLAN: "shopping-plan",
+  RECOMMENDATION: "recommendation",
+} as const;
+
+export type MessageType =
+  typeof MESSAGE_TYPES[keyof typeof MESSAGE_TYPES];

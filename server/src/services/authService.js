@@ -49,6 +49,7 @@ static async register({ name, email, password }) {
   };
 }
   // Login
+  
   static async login({ email, password }) {
     const user = await UserRepository.findByEmail(email, true);
 

@@ -56,6 +56,8 @@ export interface ProductComparison {
     platform: string;
     price: number;
   };
+
+  
 }
 
 // ======================================================
@@ -150,7 +152,7 @@ export interface OptimizeCartResponse {
   savings: number;
   missingProducts: string[];
   shoppingPlan: ShoppingPlanItem[];
-  alternatives: PlatformAlternative[];  // ← Added this!
+  alternatives: PlatformAlternative[];  
   summary: {
     totalItems: number;
     uniqueProducts: number;

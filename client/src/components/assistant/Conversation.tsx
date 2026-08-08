@@ -1,7 +1,7 @@
 import React from 'react';
 import MessageBubble from './MessageBubble';
 import LoadingBubble from './LoadingBubble';
-import { type Message } from './assistant';
+import { type Message } from './assistant.types';
 
 interface ConversationProps {
   conversation: Message[];

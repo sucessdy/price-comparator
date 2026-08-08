@@ -1,6 +1,6 @@
 const authServices = require("../services/authService");
 const sendResponse = require("../utils/sendResponse");
-const clearRefreshTokenCookie = require("../utils/Cookie")
+const clearRefreshTokenCookie = require("../utils/cookie")
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
@@ -21,7 +21,6 @@ class AuthControllers {
     sendResponse(res, {
       statusCode: 201,
       message: "User registered successfully",
-
       data: {
         user: result.user,
         accessToken: result.accessToken,

@@ -1,20 +1,31 @@
 
 
 import React from 'react';
-import { type Message } from './assistant.types';
-
-
+import { MESSAGE_TYPES, type Message } from './assistant.types';
+import CompareCard from './cards/CompareCard';
+import CartCard from './cards/CartCard';
+import type { OptimizeCartResponse, ProductComparison } from '../../types/product';
 
 interface MessageBubbleProps {
   message: Message;
   isLast?: boolean;
      isFirst?: boolean;
-
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message}) => {
  
   const isUser = message.sender === 'user';
+  const hasComparisonCard = !isUser &&
+  message.type === MESSAGE_TYPES.COMPARISON &&
+  message.data !== undefined;
+
+
+  const hasCartCard =
+  !isUser &&
+  message.type === MESSAGE_TYPES.SHOPPING_PLAN &&
+  message.data !== undefined;
+
+const hasRichCard = hasComparisonCard || hasCartCard; 
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
@@ -29,37 +40,30 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message}) => {
             </span>
           </div>
         )}
-
         <div
           className={`p-4 rounded-2xl ${
             isUser
-              ? 'bg-gradient-to-br from-[#6C63FF] to-[#8B83FF] text-white rounded-br-sm shadow-lg shadow-[#6C63FF]/20'
+              ? 'bg-linear-to-br from-[#6C63FF] to-[#8B83FF] text-white rounded-br-sm shadow-lg shadow-[#6C63FF]/20'
               : 'glass text-white rounded-bl-sm'
           }`}
         >
-          <div className="whitespace-pre-line text-[15px] leading-relaxed">
-            {message.text}
-          </div>
+       
 
-   
-          {message.chips && message.chips.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {message.chips.map((chip, index) => (
-                <span
-                  key={index}
-                  className={`px-3 py-1 text-xs font-medium rounded-full ${
-                    isUser
-                      ? 'bg-[rgba(255,255,255,0.2)] text-white'
-                      : 'bg-[rgba(108,99,255,0.15)] text-[#8B83FF] border border-[rgba(108,99,255,0.2)]'
-                  }`}
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
+          {!hasRichCard && ( 
+            <div className='whitespace-pre-line text-[15px] leading-relaxed'> {message.text}</div>
           )}
+
+          {hasComparisonCard && ( 
+  <CompareCard  comparison={message.data as ProductComparison} />
+)}
+
+{hasCartCard && (
+  <CartCard result={message.data as OptimizeCartResponse} />
+)}
+
+         
         </div>
-        {message.timestamp && (
+        {message.timestamp && ( 
        
              <div className={`text-xs text-[rgba(255,255,255,0.3)] mt-1 ${isUser ? 'text-right' : ''}`}>
            

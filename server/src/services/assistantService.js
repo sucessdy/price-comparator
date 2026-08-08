@@ -1,6 +1,6 @@
 const { parseQuery, INTENT } = require("../utils/queryParser");
 const { compareProduct, optimizeCart } = require("./productService");
-
+const {recommadationServices} = require("../services/recommendationService")
 exports.processMessage = async (message) => {
   const { intent, products } = parseQuery(message);
   switch (intent) {
@@ -9,7 +9,7 @@ exports.processMessage = async (message) => {
       return {
         success: true,
         intent,
-        type: "comparsion",
+        type: "comparison",
         message: `Here are the best price for ${products[0]}.`,
         data: comparison,
       };
@@ -25,6 +25,11 @@ exports.processMessage = async (message) => {
         data: optimiseCart,
       };
     }
+case INTENT.SHOPPING_NEED: {
+  const shoppingNeed = await recommadationServices({    category: products[0],
+    budget: null,})
+}
+
     default: {
       return {
         success: false,
@@ -36,3 +41,5 @@ exports.processMessage = async (message) => {
     }
   }
 };
+
+

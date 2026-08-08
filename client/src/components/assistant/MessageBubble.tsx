@@ -1,10 +1,11 @@
 
 
 import React from 'react';
-import { MESSAGE_TYPES, type Message } from './assistant.types';
+import { MESSAGE_TYPES, type Message  ,  type Recommendation } from './assistant.types';
 import CompareCard from './cards/CompareCard';
 import CartCard from './cards/CartCard';
 import type { OptimizeCartResponse, ProductComparison } from '../../types/product';
+import RecommendationCard from './cards/RecommendationCard';
 
 interface MessageBubbleProps {
   message: Message;
@@ -25,7 +26,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message}) => {
   message.type === MESSAGE_TYPES.SHOPPING_PLAN &&
   message.data !== undefined;
 
-const hasRichCard = hasComparisonCard || hasCartCard; 
+
+const hasRecommendationCard =
+  !isUser &&
+  message.type === MESSAGE_TYPES.RECOMMENDATION &&
+  message.data !== undefined;
+
+const hasRichCard = hasComparisonCard || hasCartCard || hasRecommendationCard; 
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
@@ -47,8 +54,7 @@ const hasRichCard = hasComparisonCard || hasCartCard;
               : 'glass text-white rounded-bl-sm'
           }`}
         >
-       
-
+      
           {!hasRichCard && ( 
             <div className='whitespace-pre-line text-[15px] leading-relaxed'> {message.text}</div>
           )}
@@ -61,7 +67,11 @@ const hasRichCard = hasComparisonCard || hasCartCard;
   <CartCard result={message.data as OptimizeCartResponse} />
 )}
 
-         
+         {hasRecommendationCard && (
+  <RecommendationCard
+    recommendation={message.data as Recommendation}
+  />
+)}
         </div>
         {message.timestamp && ( 
        

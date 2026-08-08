@@ -134,6 +134,14 @@ class ProductRepository {
   async clearAll() {
     return Product.deleteMany({});
   }
+
+  async  findByCategory( category, budget){ 
+return Product.find({
+  category : category.toLowerCase(), 
+ price : { $lte: budget }
+})
+
+  }
 }
 
 module.exports = new ProductRepository();

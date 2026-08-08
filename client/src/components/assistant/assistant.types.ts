@@ -66,3 +66,16 @@ export const MESSAGE_TYPES = {
 
 export type MessageType =
   typeof MESSAGE_TYPES[keyof typeof MESSAGE_TYPES];
+
+
+ export interface Recommendation {
+    id: string;
+    name: string;
+    brand?: string;
+    price: number;
+    reason: string;
+    pros?: string[];
+    tradeOff?: string;
+    platform?: string;
+  }
+  

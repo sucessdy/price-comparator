@@ -1,5 +1,5 @@
 const fs = require("fs");
-
+const path =require("path")
 const platforms = [
   "amazon",
   "flipkart",
@@ -27,6 +27,9 @@ const productNames = [
   "rice",
   "atta",
   "oil",
+  "ice cream",
+  "drinks",
+  "water",
   "sugar",
   "tea",
   "coffee",
@@ -67,6 +70,31 @@ const basePrices = {
   "macbook air": 99999,
   "macbook pro": 149999,
   "airpods pro": 24999,
+};
+const categories = {
+  milk: "groceries",
+  bread: "groceries",
+  eggs: "groceries",
+  butter: "groceries",
+  rice: "groceries",
+  atta: "groceries",
+  oil: "groceries",
+  sugar: "groceries",
+  tea: "groceries",
+  coffee: "groceries",
+
+  "iphone 15": "smartphones",
+  "iphone 14": "smartphones",
+  "samsung s23": "smartphones",
+  "oneplus 11": "smartphones",
+
+  "macbook air": "laptops",
+  "macbook pro": "laptops",
+  "ipad air": "tablets",
+
+  "airpods pro": "audio",
+  "boat earbuds": "audio",
+  "sony headphones": "audio",
 };
 
 // Function to generate random price variation (±20%)
@@ -116,6 +144,7 @@ for (const productName of productNames) {
       name: productName.toLowerCase(),
       price: currentPrice,
       platform: platform.toLowerCase(),
+      category: categories[productName],
       priceHistory: priceHistory,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -124,7 +153,11 @@ for (const productName of productNames) {
 }
 
 // Write to file
-fs.writeFileSync("dummyData.json", JSON.stringify(data, null, 2));
+// fs.writeFileSync("dummyData.json", JSON.stringify(data, null, 2));
+fs.writeFileSync(
+  path.join(__dirname, "dummyData.json"),
+  JSON.stringify(data, null, 2),
+);
 console.log(`✅ Dummy data generated! Total entries: ${data.length}`);
 console.log(`📊 Products: ${productNames.length}, Platforms: ${platforms.length}`);
 console.log(`📦 Total combinations: ${productNames.length} × ${platforms.length} = ${data.length}`);

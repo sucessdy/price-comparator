@@ -7,7 +7,7 @@ const { NotFoundError, ValidationError } = require("../errors/AppError");
 // ADD OR UPDATE PRODUCT
 // ======================================================
 
-exports.addOrUpdateProduct = async ({ name, price, platform }) => {
+exports.addOrUpdateProduct = async ({ name, price, platform , category }) => {
   const existing = await productRepository.findByNameAndPlatform(name, platform);
 
   if (existing) {
@@ -29,6 +29,7 @@ exports.addOrUpdateProduct = async ({ name, price, platform }) => {
     name,
     price,
     platform,
+    category
   });
 
   return {

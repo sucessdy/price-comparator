@@ -46,6 +46,7 @@ class ProductRepository {
     return Product.create({
       name: data.name.trim().toLowerCase(),
       price: data.price,
+      category: data.category.trim().toLowerCase(),
       platform: data.platform.trim().toLowerCase(),
       priceHistory: [],
     });

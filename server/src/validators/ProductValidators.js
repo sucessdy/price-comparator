@@ -24,6 +24,12 @@ const productSchema = Joi.object({
     .required()
     .min(2)
     .max(50)
+    , 
+    category : Joi.string().trim()
+  .required()
+  .min(2)
+  .max(50),
+    
 });
 module.exports = {
   productSchema

@@ -98,10 +98,11 @@
 //     data: response.data,
 //   };
 // }
-import api from "../api/productApi";
+
+import api from "../api/assistant.api";
 
 export async function sendAssistantMessage(message: string) {
-  const response = await api.post("/api/assistant/chat", {
+  const response = await api.post("/assistant/chat", {
     message,
   });
 

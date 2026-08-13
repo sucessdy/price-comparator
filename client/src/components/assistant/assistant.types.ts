@@ -70,7 +70,7 @@ export type MessageType =
 
  export interface Recommendation {
     id: string;
-    name: string;
+    name: string; 
     brand?: string;
     price: number;
     reason: string;

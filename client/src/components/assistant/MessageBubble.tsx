@@ -34,6 +34,7 @@ const hasRecommendationCard =
 
 const hasRichCard = hasComparisonCard || hasCartCard || hasRecommendationCard; 
 
+const recommendations = message.data as Recommendation[]; 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
       <div className={`max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}>
@@ -67,11 +68,10 @@ const hasRichCard = hasComparisonCard || hasCartCard || hasRecommendationCard;
   <CartCard result={message.data as OptimizeCartResponse} />
 )}
 
-         {hasRecommendationCard && (
-  <RecommendationCard
-    recommendation={message.data as Recommendation}
-  />
-)}
+ {hasRecommendationCard && recommendations.map((recommendation) => (
+  <RecommendationCard   key={recommendation.id}
+      recommendation={recommendation}/>
+ ))}
         </div>
         {message.timestamp && ( 
        

@@ -6,7 +6,7 @@ import { useAssistant } from "../../hooks/useAssistant";
 
 const AssistantPage: React.FC = () => {
 
-  const { input, setInput, messages, isLoading, handleSendMessage ,  clearConversation } =
+  const { input, setInput, messages, isLoading, handleSendMessage ,  clearConversation , handleCompare} =
     useAssistant();
 const hasConversation = messages.length > 0; 
   return (
@@ -28,6 +28,7 @@ const hasConversation = messages.length > 0;
       isLoading={isLoading}
       onBack={clearConversation}
       onClear={clearConversation}
+      onCompare={handleCompare}
     />
 
     <ChatInput

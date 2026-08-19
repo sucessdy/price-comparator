@@ -1,11 +1,13 @@
 import React from "react";
 import { type Recommendation } from "../assistant.types";
-interface RecommendationCardProps {
+export interface RecommendationCardProps {
   recommendation: Recommendation;
+   onCompare: (productName : string) => void;
 }
 
 const RecommendationCard: React.FC<RecommendationCardProps> = ({
   recommendation,
+  onCompare
 }) => {
   return (
     <div className="mt-3 rounded-2xl border border-[rgba(108,99,255,0.2)] bg-[rgba(108,99,255,0.05)] p-4">
@@ -29,7 +31,8 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
       {/* Price */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-white/60">
+        <span 
+        className="text-sm text-white/60">
           Best price
         </span>
 
@@ -75,7 +78,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
       {/* Actions */}
       <div className="mt-4 flex gap-2">
-        <button className="flex-1 rounded-xl bg-[#6C63FF] px-3 py-2 text-sm font-medium text-white hover:bg-[#7A72FF]">
+        <button onClick={() => onCompare(recommendation.name)} className="flex-1 rounded-xl bg-[#6C63FF] px-3 py-2 text-sm font-medium text-white hover:bg-[#7A72FF]">
           Compare
         </button>
 

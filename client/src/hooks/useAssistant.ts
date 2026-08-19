@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
 import { useUser } from "../context/useUser";
 import { sendAssistantMessage } from "../services/assistant.service";
-import type { Message } from "../components/assistant/assistant.types";
-import { createAssistantMessage } from "../utils/createAssistantMessage";
+
+import { compareProduct } from "../api/productApi";
+
+import {
+  INTENT_TYPES,
+  type Message,
+} from "../components/assistant/assistant.types";
+import {
+  createAssistantMessage,
+  type AssistantResponse,
+} from "../utils/createAssistantMessage";
 
 const loadSavedMessages = (): Message[] => {
   try {
@@ -25,6 +34,42 @@ export function useAssistant() {
   const [messages, setMessages] = useState<Message[]>(loadSavedMessages);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const handleCompare = async (productName: string): Promise<void> => {
+    const name = productName.trim();
+    if (!name || isLoading) return;
+    setIsLoading(true);
+
+    try {
+      const response = await compareProduct(productName);
+
+      const assistantResponse: AssistantResponse = {
+        message: `Here are the price comparisons for ${name}.`,
+        priority: "lowest-price",
+        intent: INTENT_TYPES.COMPARE,
+        data: response.data,
+      };
+
+      const assistantMessage = createAssistantMessage(assistantResponse);
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to compare this product. Please try again";
+      setMessages((prev) => [...prev, {
+        id: Date.now(),
+        text: message,
+        sender: "assistant",
+        timestamp: new Date(),
+        status: "error" , 
+      }]
+    );
+    }
+    finally{
+setIsLoading(false)  ; 
+
+    }
+  };
   useEffect(() => {
     if (messages.length === 0) {
       localStorage.removeItem("chatConversation");
@@ -105,5 +150,6 @@ export function useAssistant() {
     isLoading,
     handleSendMessage,
     clearConversation,
+    handleCompare
   };
 }

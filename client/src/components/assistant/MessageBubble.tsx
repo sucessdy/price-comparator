@@ -11,9 +11,10 @@ interface MessageBubbleProps {
   message: Message;
   isLast?: boolean;
      isFirst?: boolean;
+     onCompare : (productName: string) => void; 
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message}) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message , onCompare}) => {
  
   const isUser = message.sender === 'user';
   const hasComparisonCard = !isUser &&
@@ -33,6 +34,7 @@ const hasRecommendationCard =
   message.data !== undefined;
 
 const hasRichCard = hasComparisonCard || hasCartCard || hasRecommendationCard; 
+
 
 const recommendations = message.data as Recommendation[]; 
   return (
@@ -70,14 +72,21 @@ const recommendations = message.data as Recommendation[];
 
  {hasRecommendationCard && recommendations.map((recommendation) => (
   <RecommendationCard   key={recommendation.id}
-      recommendation={recommendation}/>
+      recommendation={recommendation} onCompare={onCompare}/>
+     
  ))}
         </div>
         {message.timestamp && ( 
        
              <div className={`text-xs text-[rgba(255,255,255,0.3)] mt-1 ${isUser ? 'text-right' : ''}`}>
            
-             {message.timestamp.toLocaleTimeString().toString()} 
+             {message.timestamp.toLocaleTimeString("en-IN", { 
+hour:"numeric",
+minute : "2-digit",
+hour12: true 
+             })
+             
+             } 
             {message.status === 'sending' && (
               <span className="ml-2 text-[#8B83FF]">● Sending...</span>
             )}

@@ -1,18 +1,19 @@
 import { INTENT_TYPES, MESSAGE_TYPES, type IntentType, type Message, type MessageType } from "../components/assistant/assistant.types";
 
-interface AssistantResponse {
+export interface AssistantResponse {
   message: string;
   budget?: number;
-  priority: string;
+  priority?: string;
   intent: IntentType;
-  data: unknown;  // ← Fixed: semicolon, not colon
+  data: unknown; 
   context?: Record<string, unknown>;
 }
 
+
+
 export const createAssistantMessage = (response: AssistantResponse): Message => {
   // eslint-disable-next-line no-useless-assignment
-  let type: MessageType = MESSAGE_TYPES.TEXT;  // ← Only declare once
-
+  let type: MessageType = MESSAGE_TYPES.TEXT;  
   switch (response.intent) {
     case INTENT_TYPES.COMPARE:
       type = MESSAGE_TYPES.COMPARISON;

@@ -8,14 +8,16 @@ interface ChatPageProps {
   messages: Message[];
   isLoading: boolean;
   onBack: () => void;
-  onClear?: () => void;
+  onClear?: () => void; 
+  onCompare : (productName : string) => void ; 
 }
 
 const ChatPage: React.FC<ChatPageProps> = ({
   messages,
   isLoading,
   onBack,
-  onClear
+  onClear,
+  onCompare
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +63,7 @@ const ChatPage: React.FC<ChatPageProps> = ({
             key={message.id}
             message={message}
             isLast={index === messages.length - 1}
+            onCompare={onCompare}
           />
         ))}
         {isLoading && <LoadingBubble />}

@@ -10,6 +10,7 @@ interface ChatPageProps {
   onBack: () => void;
   onClear?: () => void; 
   onCompare : (productName : string) => void ; 
+onAddToPlan: (productName: string) => void;
 }
 
 const ChatPage: React.FC<ChatPageProps> = ({
@@ -17,7 +18,8 @@ const ChatPage: React.FC<ChatPageProps> = ({
   isLoading,
   onBack,
   onClear,
-  onCompare
+  onCompare, 
+  onAddToPlan
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -64,6 +66,7 @@ const ChatPage: React.FC<ChatPageProps> = ({
             message={message}
             isLast={index === messages.length - 1}
             onCompare={onCompare}
+             onAddToPlan={onAddToPlan}
           />
         ))}
         {isLoading && <LoadingBubble />}

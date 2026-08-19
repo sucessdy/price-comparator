@@ -1,14 +1,21 @@
-
 import LandingPage from "./LandingPage";
 import ChatPage from "./ChatPage";
 import ChatInput from "./ChatInput";
 import { useAssistant } from "../../hooks/useAssistant";
 
 const AssistantPage: React.FC = () => {
+  const {
+    input,
+    setInput,
+    messages,
+    isLoading,
+    handleSendMessage,
+    clearConversation,
+    handleCompare,
+    handleAddToPlan,
 
-  const { input, setInput, messages, isLoading, handleSendMessage ,  clearConversation , handleCompare} =
-    useAssistant();
-const hasConversation = messages.length > 0; 
+  } = useAssistant();
+  const hasConversation = messages.length > 0;
   return (
     <div className="min-h-[calc(100vh-80px)] bg-[#0A0A0F] relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
@@ -21,32 +28,33 @@ const hasConversation = messages.length > 0;
       </div>
 
       <div className="relative z-10">
-       {hasConversation ? (
-        <>
-    <ChatPage
-      messages={messages}
-      isLoading={isLoading}
-      onBack={clearConversation}
-      onClear={clearConversation}
-      onCompare={handleCompare}
-    />
+        {hasConversation ? (
+          <>
+            <ChatPage
+              messages={messages}
+              isLoading={isLoading}
+              onBack={clearConversation}
+              onClear={clearConversation}
+              onCompare={handleCompare}
+             onAddToPlan={handleAddToPlan}
+            />
 
-    <ChatInput
-      input={input}
-    onInputChange={setInput}
-      onSend={() => handleSendMessage(input)}
-      isLoading={isLoading}
-      placeholder="Ask about groceries..."
-    />
-  </>
-) : (
-  <LandingPage
-    onSend={handleSendMessage}
-    setInput={setInput}
-    input={input}
-    isLoading={isLoading}
-  />)}
-
+            <ChatInput
+              input={input}
+              onInputChange={setInput}
+              onSend={() => handleSendMessage(input)}
+              isLoading={isLoading}
+              placeholder="Ask about groceries..."
+            />
+          </>
+        ) : (
+          <LandingPage
+            onSend={handleSendMessage}
+            setInput={setInput}
+            input={input}
+            isLoading={isLoading}
+          />
+        )}
       </div>
     </div>
   );

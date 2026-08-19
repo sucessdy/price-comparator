@@ -1,45 +1,54 @@
-
-
-import React from 'react';
-import { MESSAGE_TYPES, type Message  ,  type Recommendation } from './assistant.types';
-import CompareCard from './cards/CompareCard';
-import CartCard from './cards/CartCard';
-import type { OptimizeCartResponse, ProductComparison } from '../../types/product';
-import RecommendationCard from './cards/RecommendationCard';
+import React from "react";
+import {
+  MESSAGE_TYPES,
+  type Message,
+  type Recommendation,
+} from "./assistant.types";
+import CompareCard from "./cards/CompareCard";
+import CartCard from "./cards/CartCard";
+import type {
+  OptimizeCartResponse,
+  ProductComparison,
+} from "../../types/product";
+import RecommendationCard from "./cards/RecommendationCard";
 
 interface MessageBubbleProps {
   message: Message;
   isLast?: boolean;
-     isFirst?: boolean;
-     onCompare : (productName: string) => void; 
+  isFirst?: boolean;
+  onCompare: (productName: string) => void;
+  onAddToPlan: (productName: string) => void;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message , onCompare}) => {
- 
-  const isUser = message.sender === 'user';
-  const hasComparisonCard = !isUser &&
-  message.type === MESSAGE_TYPES.COMPARISON &&
-  message.data !== undefined;
-
+const MessageBubble: React.FC<MessageBubbleProps> = ({
+  message,
+  onCompare,
+  onAddToPlan
+}) => {
+  const isUser = message.sender === "user";
+  const hasComparisonCard =
+    !isUser &&
+    message.type === MESSAGE_TYPES.COMPARISON &&
+    message.data !== undefined;
 
   const hasCartCard =
-  !isUser &&
-  message.type === MESSAGE_TYPES.SHOPPING_PLAN &&
-  message.data !== undefined;
+    !isUser &&
+    message.type === MESSAGE_TYPES.SHOPPING_PLAN &&
+    message.data !== undefined;
 
+  const hasRecommendationCard =
+    !isUser &&
+    message.type === MESSAGE_TYPES.RECOMMENDATION &&
+    message.data !== undefined;
 
-const hasRecommendationCard =
-  !isUser &&
-  message.type === MESSAGE_TYPES.RECOMMENDATION &&
-  message.data !== undefined;
+  const hasRichCard = hasComparisonCard || hasCartCard || hasRecommendationCard;
 
-const hasRichCard = hasComparisonCard || hasCartCard || hasRecommendationCard; 
-
-
-const recommendations = message.data as Recommendation[]; 
+  const recommendations = message.data as Recommendation[];
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
-      <div className={`max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}>
+    <div
+      className={`flex ${isUser ? "justify-end" : "justify-start"} animate-fadeIn`}
+    >
+      <div className={`max-w-[85%] ${isUser ? "items-end" : "items-start"}`}>
         {!isUser && (
           <div className="flex items-center gap-2 mb-1.5">
             <div className="w-6 h-6 rounded-full bg-linear-to-br from-[#6C63FF] to-[#8B83FF] flex items-center justify-center text-xs text-white font-medium">
@@ -53,44 +62,48 @@ const recommendations = message.data as Recommendation[];
         <div
           className={`p-4 rounded-2xl ${
             isUser
-              ? 'bg-linear-to-br from-[#6C63FF] to-[#8B83FF] text-white rounded-br-sm shadow-lg shadow-[#6C63FF]/20'
-              : 'glass text-white rounded-bl-sm'
+              ? "bg-linear-to-br from-[#6C63FF] to-[#8B83FF] text-white rounded-br-sm shadow-lg shadow-[#6C63FF]/20"
+              : "glass text-white rounded-bl-sm"
           }`}
         >
-      
-          {!hasRichCard && ( 
-            <div className='whitespace-pre-line text-[15px] leading-relaxed'> {message.text}</div>
+          {!hasRichCard && (
+            <div className="whitespace-pre-line text-[15px] leading-relaxed">
+              {" "}
+              {message.text}
+            </div>
           )}
 
-          {hasComparisonCard && ( 
-  <CompareCard  comparison={message.data as ProductComparison} />
-)}
+          {hasComparisonCard && (
+            <CompareCard comparison={message.data as ProductComparison} />
+          )}
 
-{hasCartCard && (
-  <CartCard result={message.data as OptimizeCartResponse} />
-)}
+          {hasCartCard && (
+            <CartCard result={message.data as OptimizeCartResponse} />
+          )}
 
- {hasRecommendationCard && recommendations.map((recommendation) => (
-  <RecommendationCard   key={recommendation.id}
-      recommendation={recommendation} onCompare={onCompare}/>
-     
- ))}
-        </div>
-        {message.timestamp && ( 
-       
-             <div className={`text-xs text-[rgba(255,255,255,0.3)] mt-1 ${isUser ? 'text-right' : ''}`}>
-           
-             {message.timestamp.toLocaleTimeString("en-IN", { 
-hour:"numeric",
-minute : "2-digit",
-hour12: true 
-             })
-             
-             } 
-            {message.status === 'sending' && (
+          {hasRecommendationCard &&
+            recommendations.map((recommendation) => (
+              <RecommendationCard
+                key={recommendation.id}
+                recommendation={recommendation}
+                onCompare={onCompare}
+                onAddToPlan={onAddToPlan}
+              />
+            ))}
+        </div> 
+        {message.timestamp && (
+          <div
+            className={`text-xs text-[rgba(255,255,255,0.3)] mt-1 ${isUser ? "text-right" : ""}`}
+          >
+            {message.timestamp.toLocaleTimeString("en-IN", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })}
+            {message.status === "sending" && (
               <span className="ml-2 text-[#8B83FF]">● Sending...</span>
             )}
-            {message.status === 'error' && (
+            {message.status === "error" && (
               <span className="ml-2 text-[#FF6B9D]">⚠️ Failed</span>
             )}
           </div>
@@ -100,4 +113,4 @@ hour12: true
   );
 };
 
-export default MessageBubble; 
+export default MessageBubble;

@@ -12,6 +12,7 @@ import {
   createAssistantMessage,
   type AssistantResponse,
 } from "../utils/createAssistantMessage";
+import type { CartItem } from "../types/product";
 
 const loadSavedMessages = (): Message[] => {
   try {
@@ -33,6 +34,7 @@ export function useAssistant() {
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>(loadSavedMessages);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [shoppingPlan, setShoppingPlan] = useState<CartItem[]>([]);
 
   const handleCompare = async (productName: string): Promise<void> => {
     const name = productName.trim();
@@ -56,18 +58,18 @@ export function useAssistant() {
         error instanceof Error
           ? error.message
           : "Unable to compare this product. Please try again";
-      setMessages((prev) => [...prev, {
-        id: Date.now(),
-        text: message,
-        sender: "assistant",
-        timestamp: new Date(),
-        status: "error" , 
-      }]
-    );
-    }
-    finally{
-setIsLoading(false)  ; 
-
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          text: message,
+          sender: "assistant",
+          timestamp: new Date(),
+          status: "error",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
     }
   };
   useEffect(() => {
@@ -141,15 +143,34 @@ setIsLoading(false)  ;
   const clearConversation = () => {
     setMessages([]);
     localStorage.removeItem("chatConversation");
+
+  };
+    
+  const handleAddToPlan = (productName: string): void => {
+    const name = productName.trim().toLowerCase()  ;
+    if (!name) return ;
+    setShoppingPlan((prev) => { 
+      const existingProduct = prev.find((item)=> item.name === name) ;
+      if (existingProduct) {
+        return prev.map((item)=> 
+        item.name === name ? {...item, quantity : item.quantity + 1} : item
+        )
+      }
+      return [...prev, {name , quantity: 1}] ; 
+    })
+   
+
   };
 
   return {
-    input,
-    setInput,
-    messages,
-    isLoading,
-    handleSendMessage,
-    clearConversation,
-    handleCompare
+   input,
+  setInput,
+  messages,
+  isLoading,
+  shoppingPlan,
+  handleSendMessage,
+  handleCompare,
+  handleAddToPlan,
+  clearConversation,
   };
 }

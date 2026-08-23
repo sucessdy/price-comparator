@@ -50,7 +50,6 @@ export function useAssistant() {
         intent: INTENT_TYPES.COMPARE,
         data: response.data,
       };
-
       const assistantMessage = createAssistantMessage(assistantResponse);
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
@@ -146,22 +145,50 @@ export function useAssistant() {
 
   };
     
+  // const handleAddToPlan = (productName: string): void => {
+  //   const name = productName.trim().toLowerCase()  ;
+  //   if (!name) return ;
+  //   setShoppingPlan((prev) => { 
+  //     const existingProduct = prev.find((item)=> item.name === name) ;
+  //     if (existingProduct) {
+  //       return prev.map((item)=> 
+  //       item.name === name ? {...item, quantity : item.quantity + 1} : item
+  //       )
+  //     }
+  //     return [...prev, {name , quantity: 1}] ; 
+  //   })
+  // };
+
   const handleAddToPlan = (productName: string): void => {
-    const name = productName.trim().toLowerCase()  ;
-    if (!name) return ;
-    setShoppingPlan((prev) => { 
-      const existingProduct = prev.find((item)=> item.name === name) ;
-      if (existingProduct) {
-        return prev.map((item)=> 
-        item.name === name ? {...item, quantity : item.quantity + 1} : item
-        )
-      }
-      return [...prev, {name , quantity: 1}] ; 
-    })
-   
+  const name = productName.trim().toLowerCase();
 
-  };
+  if (!name) return;
 
+  setShoppingPlan((previous) => {
+    const existingProduct = previous.find((item) => item.name === name);
+
+    if (existingProduct) {
+      return previous.map((item) =>
+        item.name === name
+          ? { ...item, quantity: item.quantity + 1 }
+          : item,
+      );
+    }
+
+    return [...previous, { name, quantity: 1 }];
+  });
+
+  setMessages((previous) => [
+    ...previous,
+    {
+      id: Date.now(),
+      text: `Added ${name} to your shopping plan.`,
+      sender: "assistant",
+      timestamp: new Date(),
+      status: "sent",
+    },
+  ]);
+}; 
   return {
    input,
   setInput,

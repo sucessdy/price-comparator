@@ -1,5 +1,21 @@
+
+Your backend is the “brain” behind the UI. The frontend shows cards and buttons; the backend decides what data to return, reads products from MongoDB, and calculates the cheapest shopping option.
+The big picture
+```mermaid
+flowchart LR
+  UI["React frontend"] --> API["Express API"]
+  API --> Route["Route"]
+  Route --> Controller["Controller"]
+  Controller --> Service["Service"]
+  Service --> Repository["Repository"]
+  Repository --> DB["MongoDB"]
+```
+
+
+
 Each layer has one job, which keeps the project organized.
 Where the backend starts
+
 [server.js](/Users/muktakumari/Downloads/price-comparator/server/server.js) is the entry point.
 It:
 - loads .env values such as MONGO_URI

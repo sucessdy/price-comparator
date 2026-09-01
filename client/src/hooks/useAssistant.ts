@@ -142,62 +142,45 @@ export function useAssistant() {
   const clearConversation = () => {
     setMessages([]);
     localStorage.removeItem("chatConversation");
-
   };
-    
-  // const handleAddToPlan = (productName: string): void => {
-  //   const name = productName.trim().toLowerCase()  ;
-  //   if (!name) return ;
-  //   setShoppingPlan((prev) => { 
-  //     const existingProduct = prev.find((item)=> item.name === name) ;
-  //     if (existingProduct) {
-  //       return prev.map((item)=> 
-  //       item.name === name ? {...item, quantity : item.quantity + 1} : item
-  //       )
-  //     }
-  //     return [...prev, {name , quantity: 1}] ; 
-  //   })
-  // };
 
   const handleAddToPlan = (productName: string): void => {
-  const name = productName.trim().toLowerCase();
+    const name = productName.trim().toLowerCase();
 
-  if (!name) return;
+    if (!name) return;
 
-  setShoppingPlan((previous) => {
-    const existingProduct = previous.find((item) => item.name === name);
+    setShoppingPlan((previous) => {
+      const existingProduct = previous.find((item) => item.name === name);
 
-    if (existingProduct) {
-      return previous.map((item) =>
-        item.name === name
-          ? { ...item, quantity: item.quantity + 1 }
-          : item,
-      );
-    }
+      if (existingProduct) {
+        return previous.map((item) =>
+          item.name === name ? { ...item, quantity: item.quantity + 1 } : item,
+        );
+      }
 
-    return [...previous, { name, quantity: 1 }];
-  });
+      return [...previous, { name, quantity: 1 }];
+    });
 
-  setMessages((previous) => [
-    ...previous,
-    {
-      id: Date.now(),
-      text: `Added ${name} to your shopping plan.`,
-      sender: "assistant",
-      timestamp: new Date(),
-      status: "sent",
-    },
-  ]);
-}; 
+    setMessages((previous) => [
+      ...previous,
+      {
+        id: Date.now(),
+        text: `Added ${name} to your shopping plan.`,
+        sender: "assistant",
+        timestamp: new Date(),
+        status: "sent",
+      },
+    ]);
+  };
   return {
-   input,
-  setInput,
-  messages,
-  isLoading,
-  shoppingPlan,
-  handleSendMessage,
-  handleCompare,
-  handleAddToPlan,
-  clearConversation,
+    input,
+    setInput,
+    messages,
+    isLoading,
+    shoppingPlan,
+    handleSendMessage,
+    handleCompare,
+    handleAddToPlan,
+    clearConversation,
   };
 }

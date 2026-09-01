@@ -113,7 +113,7 @@ scripts/	Generates and seeds dummy product data.
 
 The files you will use most
 - [assistantService.js](/Users/muktakumari/Downloads/price-comparator/server/src/services/assistantService.js): decides whether a chat message is compare, recommendation, or cart optimization.
-- [queryParser.js](/Users/muktakumari/Downloads/price-comparator/server/src/utils/queryParser.js): understands phrases like “audio under 4000.”
+- [queryParser.js](/server/src/utils/queryParser.js): understands phrases like “audio under 4000.”
 - [productService.js](/Users/muktakumari/Downloads/price-comparator/server/src/services/productService.js): price comparison and final cart optimization.
 - [recommendationService.js](/Users/muktakumari/Downloads/price-comparator/server/src/services/recommendationService.js): category + budget recommendations.
 - [productRepository.js](/Users/muktakumari/Downloads/price-comparator/server/src/repositories/productRepository.js): actual MongoDB reads/writes. 

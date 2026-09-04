@@ -9,7 +9,8 @@ export interface RecommendationCardProps {
 const RecommendationCard: React.FC<RecommendationCardProps> = ({
   recommendation,
   onCompare, 
-  onAddToPlan,
+  onAddToPlan, 
+
 }) => {
   return (
     <div className="mt-3 rounded-2xl border border-[rgba(108,99,255,0.2)] bg-[rgba(108,99,255,0.05)] p-4">

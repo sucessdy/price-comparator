@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "../context/useUser";
 import { sendAssistantMessage } from "../services/assistant.service";
 
-import { compareProduct } from "../api/productApi";
+import { compareProduct, optimizeCart } from "../api/productApi";
 
 import {
   INTENT_TYPES,
@@ -142,6 +142,7 @@ export function useAssistant() {
   const clearConversation = () => {
     setMessages([]);
     localStorage.removeItem("chatConversation");
+    setShoppingPlan([]);
   };
 
   const handleAddToPlan = (productName: string): void => {
@@ -172,6 +173,55 @@ export function useAssistant() {
       },
     ]);
   };
+
+  const handleOptimizePlan = async (): Promise<void> => {
+    if (shoppingPlan.length === 0 || isLoading) return;
+    setIsLoading(true);
+    try {
+      const response = await optimizeCart(shoppingPlan);
+      const assistantResponse: AssistantResponse = {
+        message: `Here's the best way to buy your plan `,
+        priority: "lowest-total",
+        intent: INTENT_TYPES.OPTIMIZE_CART,
+        data: response.data,
+      };
+      const assistantMessage = createAssistantMessage(assistantResponse);
+      setMessages((prev) => [...prev, assistantMessage]);
+      setShoppingPlan([]);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to optimize this cart. Please try again.";
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          text: message,
+          sender: "assistant",
+          timestamp: new Date(),
+          status: "error",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+ const handleRemoveFromPlan = (productName: string): void => {
+  const name = productName.trim().toLowerCase();
+
+  setShoppingPlan((previous) =>
+    previous
+      .map((item) =>
+        item.name === name
+          ? { ...item, quantity: item.quantity - 1 }
+          : item,
+      )
+      .filter((item) => item.quantity > 0),
+  );
+};
+
   return {
     input,
     setInput,
@@ -182,5 +232,8 @@ export function useAssistant() {
     handleCompare,
     handleAddToPlan,
     clearConversation,
+    handleOptimizePlan,
+
+    handleRemoveFromPlan,
   };
 }

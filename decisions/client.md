@@ -85,3 +85,33 @@ RecommendationCard
 → Optimize Plan later
 → backend /api/optimize-cart
 → CartCard
+
+
+-> AddToPlan data flow 
+
+Add to Plan
+      ↓
+shoppingPlan = CartItem[]
+      ↓
+Optimize Plan
+      ↓
+await optimizeCart(shoppingPlan)
+      ↓
+createAssistantMessage()
+      ↓
+setMessages()
+      ↓
+CartCard appears
+      ↓
+setShoppingPlan([])
+
+
+Recommendation
+→ Add to Plan
+→ quantity increases
+→ plan displays selected items
+→ remove decreases quantity
+→ item disappears at × 0
+→ Optimize Plan
+→ backend calculates the best purchase strategy
+→ CartCard shows the result

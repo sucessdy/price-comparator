@@ -2,6 +2,7 @@ import LandingPage from "./LandingPage";
 import ChatPage from "./ChatPage";
 import ChatInput from "./ChatInput";
 import { useAssistant } from "../../hooks/useAssistant";
+import ShoppingPlanCard from "./cards/ShoppingPlanCard";
 
 const AssistantPage: React.FC = () => {
   const {
@@ -9,15 +10,18 @@ const AssistantPage: React.FC = () => {
     setInput,
     messages,
     isLoading,
+    shoppingPlan, 
+    handleOptimizePlan, 
     handleSendMessage,
     clearConversation,
     handleCompare,
+    handleRemoveFromPlan, 
     handleAddToPlan,
 
   } = useAssistant();
   const hasConversation = messages.length > 0;
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#0A0A0F] relative overflow-hidden">
+    <div className="min-h-[calc(100vh-90px)] bg-[#0A0A0F] relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#6C63FF] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-glow"></div>
         <div
@@ -37,8 +41,17 @@ const AssistantPage: React.FC = () => {
               onClear={clearConversation}
               onCompare={handleCompare}
              onAddToPlan={handleAddToPlan}
+
             />
 
+ <ShoppingPlanCard
+      items={shoppingPlan}
+onOptimize= {handleOptimizePlan}
+onRemove={handleRemoveFromPlan}
+onAdd = {handleAddToPlan}
+
+      
+    />
             <ChatInput
               input={input}
               onInputChange={setInput}

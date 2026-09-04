@@ -1,117 +1,139 @@
-The frontend is the visible part of your app: it accepts user input, sends requests to the backend, stores chat state, and decides which card to show.
-Frontend flow
+# Client Architecture
+
+The client is the visible part of the Price Comparator. It accepts a user's
+message, calls the backend when needed, stores temporary chat and shopping-plan
+state, and renders the appropriate card for each assistant response.
+
+## Application flow
+
 ```mermaid
 flowchart LR
   User --> Input["ChatInput"]
   Input --> Page["AssistantPage"]
   Page --> Hook["useAssistant"]
-  Hook --> API["assistant API / compare API"]
-  API --> Backend["Backend"]
+  Hook --> API["API clients"]
+  API --> Backend["Express backend"]
   Backend --> Hook
   Hook --> Messages["messages state"]
   Messages --> Chat["ChatPage"]
   Chat --> Bubble["MessageBubble"]
-  Bubble --> Card["Compare / Recommendation / Cart card"]
+  Bubble --> Cards["Comparison, recommendation, or cart card"]
 ```
 
+## Entry point and page structure
 
+- [`main.tsx`](../client/src/main.tsx) starts React and renders the app.
+- [`App.tsx`](../client/src/App.tsx) wraps the application in `UserProvider`.
+- `UserProvider` stores user-level data, such as preferences and budget.
+- [`AssistantPage.tsx`](../client/src/components/assistant/AssistantPage.tsx)
+  is the main assistant screen. It connects the state from `useAssistant` to
+  `LandingPage`, `ChatPage`, `ChatInput`, and `ShoppingPlanCard`.
 
-Where the frontend starts
-[main.tsx](/client/src/main.tsx) starts React.
-It renders [App.tsx](/client/src/App.tsx), which wraps your app in UserProvider.
-UserProvider is global user state: preferences, budget, and user-related data.
-Your main page
-[AssistantPage.tsx](/client/src/components/assistant/AssistantPage.tsx) is the main assistant screen.
-It connects everything:
-useAssistant()
-↓
-messages, input, loading state
-↓
-ChatPage + ChatInput
-It decides which screen appears:
-- No messages → LandingPage
-- Messages exist → ChatPage and ChatInput
-The important file: useAssistant
-[useAssistant.ts](/client/src/hooks/useAssistant.ts) is the frontend’s main “brain.”
-It stores:
-messages        // Every user and assistant chat message
-input           // What is currently typed
-isLoading       // Whether an API request is running
-shoppingPlan    // Products selected with Add to Plan
-It also contains the important actions:
-handleSendMessage
-→ sends normal chat text to /api/assistant/chat
+`AssistantPage` chooses the screen based on whether the conversation has
+messages:
 
-handleCompare
-→ calls /api/compare for one product
+```text
+No messages     → LandingPage
+Has messages    → ChatPage + ChatInput + ShoppingPlanCard
+```
 
-handleAddToPlan
-→ stores product + quantity in shoppingPlan
-This is why you are coding this file: it keeps behavior and state in one reusable place rather than putting everything inside UI components.
-How cards appear
-[MessageBubble.tsx](/client/src/components/assistant/MessageBubble.tsx) checks the message type:
-COMPARE        → CompareCard
-OPTIMIZE_CART  → CartCard
-SHOPPING_NEED  → RecommendationCard
-So when the backend returns:
+## State and actions
+
+[`useAssistant.ts`](../client/src/hooks/useAssistant.ts) is the main client
+state hook. Keeping this logic in one hook lets presentation components stay
+focused on rendering instead of API and state-management details.
+
+| State or action | Responsibility |
+| --- | --- |
+| `messages` | Stores user and assistant chat messages. Messages are saved in browser `localStorage`. |
+| `input` | Stores the text currently typed into the chat input. |
+| `isLoading` | Prevents duplicate requests and displays a loading state. |
+| `shoppingPlan` | Stores selected products as `CartItem[]`, including their quantities. |
+| `handleSendMessage` | Sends a normal chat message to the assistant API. |
+| `handleCompare` | Calls the direct product-comparison API for one product. |
+| `handleAddToPlan` | Adds one quantity of a selected product to the shopping plan. |
+| `handleRemoveFromPlan` | Removes one quantity; the product is removed only when its quantity reaches zero. |
+| `handleOptimizePlan` | Sends the selected plan to the backend for cost optimization. |
+
+Example shopping-plan data:
+
+```ts
+[
+  { name: "boat earbuds", quantity: 1 },
+  { name: "milk", quantity: 2 },
+]
+```
+
+## Assistant message rendering
+
+[`MessageBubble.tsx`](../client/src/components/assistant/MessageBubble.tsx)
+uses the assistant message intent to select a rich card:
+
+| Assistant intent | Rendered component |
+| --- | --- |
+| `COMPARE` | [`CompareCard`](../client/src/components/assistant/cards/CompareCard.tsx) |
+| `OPTIMIZE_CART` | [`CartCard`](../client/src/components/assistant/cards/CartCard.tsx) |
+| `SHOPPING_NEED` | [`RecommendationCard`](../client/src/components/assistant/cards/RecommendationCard.tsx) |
+
+For example, a backend recommendation response has this shape:
+
+```ts
 {
   intent: "SHOPPING_NEED",
   type: "recommendation",
-  data: [...]
+  data: [],
 }
-the frontend creates recommendation cards automatically.
-Your card files
-- [RecommendationCard.tsx](/client/src/components/assistant/cards/RecommendationCard.tsx)
-  Shows suggested products. Its buttons call Compare and Add to Plan.
-- [CompareCard.tsx](/client/src/components/assistant/cards/CompareCard.tsx)
-  Shows prices for one product across platforms.
-- [CartCard.tsx](/client/src/components/assistant/cards/CartCard.tsx)
-  Shows the optimized plan returned by the backend.
-- [ShoppingPlanCard.tsx](/client/src/components/assistant/cards/ShoppingPlanCard.tsx)
-  Shows the products the user selected before optimization: boat earbuds × 1, milk × 2.
-API files
-These files only communicate with the backend:
-- [assistant.api.ts](/client/src/api/assistant.api.ts)
-  Sends a user’s chat message to the assistant backend.
-- [productApi.ts](/client/src/api/productApi.ts)
-  Calls direct comparison and cart-optimization APIs.
-You separate these because UI components should not contain raw Axios code.
-The feature you are currently building
-RecommendationCard
-→ Add to Plan
-→ handleAddToPlan
-→ shoppingPlan state
-→ ShoppingPlanCard
-→ Optimize Plan later
-→ backend /api/optimize-cart
-→ CartCard
+```
 
+The client converts it to a `Message` and `MessageBubble` renders one or more
+recommendation cards.
 
--> AddToPlan data flow 
+## Card responsibilities
 
-Add to Plan
-      ↓
-shoppingPlan = CartItem[]
-      ↓
-Optimize Plan
-      ↓
-await optimizeCart(shoppingPlan)
-      ↓
-createAssistantMessage()
-      ↓
-setMessages()
-      ↓
-CartCard appears
-      ↓
-setShoppingPlan([])
+| Component | Purpose |
+| --- | --- |
+| [`RecommendationCard`](../client/src/components/assistant/cards/RecommendationCard.tsx) | Displays a recommended product and provides **Compare** and **Add to Plan** actions. |
+| [`CompareCard`](../client/src/components/assistant/cards/CompareCard.tsx) | Displays a product's prices across available platforms. |
+| [`ShoppingPlanCard`](../client/src/components/assistant/cards/ShoppingPlanCard.tsx) | Displays selected products, supports quantity changes, and starts optimization. |
+| [`CartCard`](../client/src/components/assistant/cards/CartCard.tsx) | Displays the optimized purchase strategy returned by the backend. |
 
+## API clients
 
-Recommendation
-→ Add to Plan
-→ quantity increases
-→ plan displays selected items
-→ remove decreases quantity
-→ item disappears at × 0
-→ Optimize Plan
-→ backend calculates the best purchase strategy
-→ CartCard shows the result
+API code is separated from UI code so components do not need to contain Axios
+requests or know backend URLs.
+
+- [`assistant.api.ts`](../client/src/api/assistant.api.ts) sends normal chat
+  messages to the assistant endpoint.
+- [`productApi.ts`](../client/src/api/productApi.ts) calls the direct compare
+  and cart-optimization endpoints.
+
+## Shopping-plan flow
+
+```mermaid
+flowchart TD
+  Recommendation["RecommendationCard"] --> Add["Add to Plan"]
+  Add --> Plan["shoppingPlan: CartItem[]"]
+  Plan --> PlanCard["ShoppingPlanCard"]
+  PlanCard --> Optimize["Optimize Plan"]
+  Optimize --> Request["optimizeCart(shoppingPlan)"]
+  Request --> Message["createAssistantMessage"]
+  Message --> Cart["CartCard"]
+  Cart --> Clear["Clear shoppingPlan"]
+```
+
+Quantity behavior:
+
+```text
+Add boat earbuds      → boat earbuds × 1
+Add boat earbuds      → boat earbuds × 2
+Remove one quantity   → boat earbuds × 1
+Remove one quantity   → product is removed from the plan
+```
+
+## Current persistence behavior
+
+- Chat messages persist in browser `localStorage`.
+- The shopping plan is temporary client state. It is cleared after successful
+  optimization and when the user clears the conversation.
+- A future improvement can save the shopping plan in `localStorage` or in the
+  backend for signed-in users.

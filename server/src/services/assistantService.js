@@ -3,7 +3,7 @@ const { compareProduct, optimizeCart } = require("./productService");
 const { recommendationService } = require("./recommendationService");
 
 exports.processMessage = async (message) => {
-  const { intent, products , category, budget } = parseQuery(message);
+  const { intent, products, category, budget } = parseQuery(message);
   switch (intent) {
     case INTENT.COMPARE: {
       const comparison = await compareProduct(products[0]);
@@ -28,8 +28,8 @@ exports.processMessage = async (message) => {
     }
     case INTENT.SHOPPING_NEED: {
       const recommendations = await recommendationService({
-        category, 
-        budget
+        category,
+        budget,
       });
 
       return {
@@ -38,6 +38,17 @@ exports.processMessage = async (message) => {
         type: "recommendation",
         message: "I found some options for you.",
         data: recommendations,
+      };
+    }
+
+    case INTENT.GENERAL: {
+      return {
+        success: true,
+        intent,
+        type: "text",
+        message:
+          "Hi! I can help you compare products, find recommendations, and optimize your shopping plan.",
+        data: null,
       };
     }
 

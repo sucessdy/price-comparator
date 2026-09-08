@@ -88,7 +88,7 @@ export function useAssistant() {
       sender: "user",
       timestamp: new Date(),
       status: "sending",
-    };
+    }; 
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");

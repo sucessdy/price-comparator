@@ -137,10 +137,18 @@ class ProductRepository {
   }
 
   async  findByCategory( category, budget){ 
-return Product.find({
+
+    const query = {
   category : category.toLowerCase(), 
- price : { $lte: budget }
-})
+ 
+    }
+    if (budget !== null && budget !== undefined ){
+ query.price =  { $lte: budget }
+
+    }
+    console.log("Recommendation query:", query);
+return Product.find(query)  ; 
+
 
   }
 }

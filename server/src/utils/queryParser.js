@@ -43,14 +43,15 @@ function isComparisonQuery(query) {
 
 function isOptimizationQuery(query) {
     // Check if user wants to optimize their cart
-    const optimizePatterns = [
+   const optimizePatterns = [
         /\boptimize\b/i,
-        /\bimprove\b/i,
-        /\bbetter\s+(?:deal|price|option)\b/i,
-        /\brecommend\b/i,
-        /\bsuggest\b/i,
-        /\bbest\s+(?:price|deal|option)\b/i,
+        /\boptimise\b/i,
+        /\bshopping plan\b/i,
+        /\bcart\b/i,
+        /\bcheapest combination\b/i,
+        /\bcheapest way\b/i,
     ];
+
     return optimizePatterns.some((pattern) => pattern.test(query));
 }
 
@@ -67,24 +68,28 @@ function extractBudget(query) {
 }
 
 function extractProducts(query) {
-    // Remove common words and keep product names
     const cleaned = query
-        .replace(/^(i|need|want|buy|get|find|looking for|searching for)\s*/i, '')
-        .replace(/under ₹?\d+(?:\.\d+)?/i, '')
-        .replace(/budget ₹?\d+(?:\.\d+)?/i, '')
-        .replace(/for ₹?\d+(?:\.\d+)?/i, '')
-        .replace(/\b(please|me|for|and|or)\b/gi, '')
+        .replace(
+            /^(compare|what.*compare|difference between|which is better)\s*/i,
+            ""
+        )
+        .replace(/\b(vs|versus)\b/gi, ",")
+        .replace(
+            /^(i|need|want|buy|get|find|looking for|searching for)\s*/i,
+            ""
+        )
+        .replace(/under ₹?\d+(?:\.\d+)?/i, "")
+        .replace(/budget ₹?\d+(?:\.\d+)?/i, "")
+        .replace(/for ₹?\d+(?:\.\d+)?/i, "")
+        .replace(/\b(please|me|for|or)\b/gi, "")
         .trim();
 
     if (!cleaned) return [];
 
-    // Split by commas or "and" and clean up
-    const products = cleaned
+    return cleaned
         .split(/,|\band\b/)
-        .map(item => item.trim())
-        .filter(item => item.length > 0 && !/^(under|budget|₹|for)$/i.test(item));
-
-    return products;
+        .map((item) => item.trim())
+        .filter(Boolean);
 }
 
 function extractCategory(query) {
@@ -222,7 +227,7 @@ function parseQuery(message = "") {
 }
 
 function isShoppingQuery(query) {
-    const shoppingDetect = /\b(buy|need|want|get|find|looking for|searching for)\b/i;
+    const shoppingDetect = /\b(buy|need|want|get|find|looking for|searching for)\b/i; 
     return shoppingDetect.test(query);
 }
 

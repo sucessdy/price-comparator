@@ -151,6 +151,25 @@ return Product.find(query)  ;
 
 
   }
-}
+
+
+  // Search MongoDB for products whose name or category matches the user's search term.
+  async searchProducts( searchTerm) { 
+
+const product = await Product.find({
+  $or : [
+{ name: {$regex: searchTerm, $options: "i" } },
+ { category : { $regex: searchTerm, $options: "i" } },
+  ]
+  }
+ 
+
+
+  )
+
+  return product 
+  }
+
+}; 
 
 module.exports = new ProductRepository();

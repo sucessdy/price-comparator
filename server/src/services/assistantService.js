@@ -1,18 +1,45 @@
 const { parseQuery, INTENT } = require("../utils/queryParser");
-const { compareProduct, optimizeCart } = require("./productService");
+const {
+  compareProduct,
+  optimizeCart,
+  compareProducts,
+} = require("./productService");
 const { recommendationService } = require("./recommendationService");
 
 exports.processMessage = async (message) => {
   const { intent, products, category, budget } = parseQuery(message);
   switch (intent) {
     case INTENT.COMPARE: {
-      const comparison = await compareProduct(products[0]);
+      if (products.length === 1) {
+        const comparison = await compareProduct(products[0]);
+        return {
+          success: true,
+          intent,
+          type: "comparison",
+          message: `Here are the best price for ${products[0]}.`,
+          data: comparison,
+        };
+      }
+
+      if (products.length >= 2) {
+        const comparison = await compareProducts(products);
+        console.log("PRODUCTS:", products, Array.isArray(products));
+        return {
+          success: true,
+          intent,
+          type: "comparison",
+          message: `Here's how ${products.join(" vs ")} compare.`,
+
+          data: comparison.details,
+        };
+      }
+
       return {
-        success: true,
+        success: false,
         intent,
         type: "comparison",
-        message: `Here are the best price for ${products[0]}.`,
-        data: comparison,
+        message: "Please tell me which product(s) you want to compare.",
+        data: null,
       };
     }
 
@@ -58,7 +85,7 @@ exports.processMessage = async (message) => {
         intent: INTENT.UNKNOWN,
         type: "text",
         message: "Sorry, I couldn't understand your request.",
-        data: null,
+        data: null ,
       };
     }
   }

@@ -52,12 +52,19 @@ export interface CartItem {
 export interface ProductComparison {
   product: string;
   prices: Record<string, number>;
+  platforms: PlatformPrice[]; 
   cheapest: {
     platform: string;
     price: number;
-  };
+  };  
+}
 
-  
+
+export interface PlatformPrice {
+  name: string;
+  price: number;
+  url?: string;
+  inStock?: boolean;
 }
 
 // ======================================================

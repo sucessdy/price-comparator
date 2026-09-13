@@ -87,7 +87,7 @@ function extractProducts(query) {
     if (!cleaned) return [];
 
     return cleaned
-        .split(/,|\band\b/)
+         .split(/,|\band\b|\bvs\b|\bversus\b/i)
         .map((item) => item.trim())
         .filter(Boolean);
 }

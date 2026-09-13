@@ -6,11 +6,7 @@ exports.recommendationService = async ({ category, budget }) => {
     throw new ValidationError("Product category is required");
   }
 
-  const products = await productRepository.findByCategory(
-    category,
-    budget
-  );
-
+  const products = await productRepository.searchProducts(category)
   if (!products.length) {
     throw new NotFoundError(
       `Products in "${category}" within your budget`

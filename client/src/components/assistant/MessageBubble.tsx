@@ -4,6 +4,7 @@ import {
   type Message,
   type Recommendation,
 } from "./assistant.types";
+import MultipleCompareCard from "./cards/MultipleCompareCard";
 import CompareCard from "./cards/CompareCard";
 import CartCard from "./cards/CartCard";
 import type {
@@ -31,6 +32,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     message.type === MESSAGE_TYPES.COMPARISON &&
     message.data !== undefined;
 
+    const hasMultipleComparisonCard =
+  hasComparisonCard &&
+  Array.isArray(message.data);
+
+  const hasSingleComparisonCard =
+  hasComparisonCard && !Array.isArray(message.data);
+  
   const hasCartCard =
     !isUser &&
     message.type === MESSAGE_TYPES.SHOPPING_PLAN &&
@@ -41,7 +49,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     message.type === MESSAGE_TYPES.RECOMMENDATION &&
     message.data !== undefined;
 
-  const hasRichCard = hasComparisonCard || hasCartCard || hasRecommendationCard;
+  const hasRichCard =  hasSingleComparisonCard || hasCartCard || hasRecommendationCard || 
+  hasMultipleComparisonCard ; 
+ 
+
 
   const recommendations = message.data as Recommendation[];
   return (
@@ -73,13 +84,27 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
 
+
+{/* 
           {hasComparisonCard && (
             <CompareCard comparison={message.data as ProductComparison} />
-          )}
+          )} */}
 
           {hasCartCard && (
             <CartCard result={message.data as OptimizeCartResponse} />
           )}
+
+{hasSingleComparisonCard && (
+  <CompareCard
+    comparison={message.data as ProductComparison}
+  />
+)}
+
+{hasMultipleComparisonCard && (
+  <MultipleCompareCard
+    comparisons={message.data as ProductComparison[]}
+  />
+)}
 
           {hasRecommendationCard &&
             recommendations.map((recommendation) => (

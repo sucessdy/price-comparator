@@ -76,6 +76,23 @@ exports.compareProduct = async (productName) => {
   };
 };
 
+exports.compareProducts = async (productNames) => {
+  if (productNames.length < 2) {
+    throw new Error("compareProducts requires at least 2 products");
+  }
+
+  const result = await Promise.all(
+    productNames.map((name) => exports.compareProduct(name))
+  );
+
+  return {
+    products: productNames,
+    details: result,
+  };
+};
+
+
+
 // ======================================================
 // OPTIMIZE CART
 // ======================================================

@@ -1,21 +1,33 @@
 const productRepository = require("../repositories/productRepository");
+
 const { ValidationError, NotFoundError } = require("../errors/AppError");
 
-exports.recommendationService = async ({ category, budget }) => {
+exports.recommendationService = async ({ category, budget, priority }) => {
   if (!category) {
     throw new ValidationError("Product category is required");
   }
 
-  const products = await productRepository.searchProducts(category)
+  const products = await productRepository.searchProducts(category);
+
   if (!products.length) {
     throw new NotFoundError(
-      `Products in "${category}" within your budget`
+      `Products in "${category}" not found`
     );
   }
 
-  products.sort((a, b) => a.price - b.price);
+  const filteredProducts = products.filter(
+    (product) => budget == null || product.price <= budget
+  );
 
-  return products.slice(0, 3).map((product) => ({
+  if (!filteredProducts.length) {
+    throw new NotFoundError(
+      `Products in "${category}" within your budget not found`
+    );
+  }
+
+  filteredProducts.sort((a, b) => a.price - b.price);
+
+  return filteredProducts.slice(0, 3).map((product) => ({
     id: product._id,
     name: product.name,
     price: product.price,

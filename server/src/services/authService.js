@@ -11,7 +11,7 @@ class AuthService {
   // Register
 static async register({ name, email, password }) {
   console.log("📝 Registering user:", email);
-  
+   
   //Check if user already exists
   const existingUser = await UserRepository.findByEmail(email);
   

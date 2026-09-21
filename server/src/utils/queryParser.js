@@ -8,12 +8,13 @@ const INTENT = {
     UNKNOWN: "UNKNOWN",
 };
 
-const SHOPPING_WORDS = /\b(i|need|want|buy|get|find|looking|searching|for|me|please)\b/gi;
+const SHOPPING_WORDS = /\b(i'm|im|i|need|want|buy|get|find|looking|searching|for|me|please)\b/gi;
 
 const BUDGET_PATTERNS = [
     /(?:under|below|within|upto|up\s+to)\s*₹?\s*(\d+(?:\.\d+)?)/i,
     /(?:budget\s*(?:is|of)?|for)\s*₹?\s*(\d+(?:\.\d+)?)/i,
 ];
+
 
 // ---------- DETECTION FUNCTIONS ----------
 
@@ -71,11 +72,10 @@ function extractProducts(query) {
     const cleaned = query
         .replace(
             /^(compare|what.*compare|difference between|which is better)\s*/i,
-            ""
-        )
+            "")
         .replace(/\b(vs|versus)\b/gi, ",")
         .replace(
-            /^(i|need|want|buy|get|find|looking for|searching for)\s*/i,
+            /^(i|need|want|buy|get|find|show me|looking for|searching for)\s*/i,
             ""
         )
         .replace(/under ₹?\d+(?:\.\d+)?/i, "")
@@ -114,7 +114,9 @@ function extractCategory(query) {
 
 function parseQuery(message = "") {
     console.log("📝 Parsing Query:", message);
-    const query = message.trim();
+      const query = message.trim(); 
+    const priority = extractPriority (query)
+  
 
     // 1. Check for General queries
     if (isGeneralQuery(query)) {
@@ -168,6 +170,7 @@ function parseQuery(message = "") {
                 products: [],
                 category: category,
                 budget: budget,
+                priority,
                 message: query,
             };
         }
@@ -227,11 +230,38 @@ function parseQuery(message = "") {
 }
 
 function isShoppingQuery(query) {
-    const shoppingDetect = /\b(buy|need|want|get|find|looking for|searching for)\b/i; 
+    const shoppingDetect = /\b(buy|need|want|get|find|show|looking for|searching for)\b/i; 
     return shoppingDetect.test(query);
 }
 
+
+function extractPriority  (query) { 
+const priorityPatterns = [
+    {
+      pattern: /\b(cheapest|lowest price|low price|save money)\b/i,
+      value: "lowest-price",
+    },
+    {
+      pattern: /\b(best quality|high quality|quality|better quality)\b/i,
+      value: "quality",
+    },
+    {
+      pattern: /\b(fast delivery|quick delivery|earliest delivery|fastest delivery)\b/i,
+      value: "delivery",
+    },
+  ];
+
+
+  for (const {pattern , value} of priorityPatterns) { 
+    if(pattern.test(query)) { 
+        return value ; 
+    }
+  }
+  return null ;
+
+} 
 module.exports = {
     parseQuery,
     INTENT,
 };
+

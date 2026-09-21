@@ -5,7 +5,7 @@ interface CompareCardProps {
   comparison: ProductComparison;
 }
 
-const CompareCard = ({ comparison }: CompareCardProps) => {
+const CompareCard = ({ comparison }: CompareCardProps) => { 
   const prices = Object.entries(comparison.prices).sort(
     ([, firstPrice], [, secondPrice]) => firstPrice - secondPrice,
   );

@@ -7,7 +7,7 @@ const {
 const { recommendationService } = require("./recommendationService");
 
 exports.processMessage = async (message) => {
-  const { intent, products, category, budget } = parseQuery(message);
+  const { intent, products, category, budget , priority } = parseQuery(message);
   switch (intent) {
     case INTENT.COMPARE: {
       if (products.length === 1) {
@@ -57,6 +57,7 @@ exports.processMessage = async (message) => {
       const recommendations = await recommendationService({
         category,
         budget,
+        priority 
       });
 
       return {
@@ -65,6 +66,10 @@ exports.processMessage = async (message) => {
         type: "recommendation",
         message: "I found some options for you.",
         data: recommendations,
+        context: {
+    category,
+    budget,
+  },
       };
     }
 

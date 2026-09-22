@@ -1,5 +1,5 @@
-const productRepository = require("../repositories/productRepository");
-
+// const productRepository = require("../repositories/productRepository");
+const searchProducts =require("./search/searchServices") ; 
 const { ValidationError, NotFoundError } = require("../errors/AppError");
 
 exports.recommendationService = async ({ category, budget, priority }) => {
@@ -7,7 +7,8 @@ exports.recommendationService = async ({ category, budget, priority }) => {
     throw new ValidationError("Product category is required");
   }
 
-  const products = await productRepository.searchProducts(category);
+  // const products = await productRepository.searchProducts(category);
+  const products = await searchProducts(category) ; 
 
   if (!products.length) {
     throw new NotFoundError(

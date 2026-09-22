@@ -50,7 +50,7 @@ exports.compareProduct = async (productName) => {
   const products = await productRepository.findByName(productName);
 
   if (!products.length ) {
-    throw new NotFoundError(`Product "${productName}" not found.`);
+    throw new NotFoundError(`Product "${productName}" not found.`);s
   }
 
   const prices = {};

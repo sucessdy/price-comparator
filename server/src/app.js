@@ -4,9 +4,8 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-
-
 const errorMiddleware = require("./middleware/error.middleware");
+const searchRoutes = require("./routes/searchRoutes")
 const ProductRoutes = require("./routes/productRoutes");
 const userRoutes = require("./routes/userRoutes")
 const assistantRoutes = require("./routes/assistantRoutes") 
@@ -20,6 +19,7 @@ app.use(cors());
 app.use("/api", ProductRoutes); 
 app.use("/auth",  userRoutes)
 app.use("/api/assistant", assistantRoutes)
+app.use("/api", searchRoutes) ; 
 app.use(errorMiddleware);
 
 module.exports = app;

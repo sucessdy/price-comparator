@@ -1,6 +1,6 @@
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
-
+const { connectRedis } = require("./src/config/redis");
 dotenv.config({ path: "./.env" });
 
 if (!process.env.MONGO_URI) {
@@ -23,6 +23,8 @@ async function startServer() {
   try {
 
     await connectDB();
+
+    await connectRedis();
  app.use((req, res, next) => {
       console.log(`\n📨 ${req.method} ${req.url}`);
       console.log("📦 Headers:", req.headers);

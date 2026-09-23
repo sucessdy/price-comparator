@@ -5,9 +5,10 @@ function normalizedProduct(product) {
     platform: product.source,
     rating: product.rating ?? null,
     reviews: product.reviews ?? null,
-    image: product.thumbnail,
-    url: product.product_link,
+    image: product.thumbnail ?? null,
+    productLink: product.product_link ?? null,
     delivery: product.delivery ?? null,
+    source: "serpapi",
   };
 }
 

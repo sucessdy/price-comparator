@@ -1,4 +1,5 @@
-const mongoose = require("mongoose") ; 
+const mongoose = require("mongoose") ;
+ 
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -58,10 +59,15 @@ productSchema.index(
   }
 );
 
+  
+ 
+
 const Product =
   mongoose.model(
     "Product",
     productSchema
   );
+
+
 
 module.exports = Product;

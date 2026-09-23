@@ -1,0 +1,19 @@
+MongoDB product ──┐
+                  ├──→ Offer
+SerpApi result ───┘ 
+
+why we crete a offer folder - 
+
+An offer should have a common shape, for example:
+{
+  name,
+  platform,
+  price,
+  delivery,
+  rating,
+  reviews,
+  productLink,
+  image, 
+  source
+}
+

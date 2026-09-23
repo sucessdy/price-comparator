@@ -33,6 +33,7 @@ exports.recommendationService = async ({ category, budget, priority }) => {
     name: product.name,
     price: product.price,
     platform: product.platform,
+  
     reason: `Fits your ${category} requirement${
       budget ? ` and stays within ₹${budget}` : ""
     }.`,

@@ -1,5 +1,5 @@
 const { ValidationError } = require("../errors/AppError");
-const { searchProduct } = require("./../services/search/searchServices");
+const  searchProduct  = require("./../services/search/searchServices");
 
 async function searchProductsController(req, res, next) {
   try {

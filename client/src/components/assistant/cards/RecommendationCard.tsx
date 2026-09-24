@@ -3,7 +3,7 @@ import { type Recommendation } from "../assistant.types";
 export interface RecommendationCardProps {
   recommendation: Recommendation;
    onCompare: (productName : string) => void;
- onAddToPlan: (productName: string) => void;
+ onAddToPlan: (recommendation : Recommendation) => void;
 }
 
 const RecommendationCard: React.FC<RecommendationCardProps> = ({
@@ -85,7 +85,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
           Compare
         </button>
 
-        <button  onClick={() => onAddToPlan(recommendation.name)}  className="flex-1 rounded-xl border border-white/10 px-3 py-2 text-sm font-medium text-white/70 hover:bg-white/5">
+        <button  onClick={() => onAddToPlan(recommendation)}  className="flex-1 rounded-xl border border-white/10 px-3 py-2 text-sm font-medium text-white/70 hover:bg-white/5">
           Add to Plan
         </button>
       </div>

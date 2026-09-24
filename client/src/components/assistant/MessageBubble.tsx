@@ -18,7 +18,7 @@ interface MessageBubbleProps {
   isLast?: boolean;
   isFirst?: boolean;
   onCompare: (productName: string) => void;
-  onAddToPlan: (productName: string) => void;
+  onAddToPlan: (recommendation: Recommendation) => void;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -109,7 +109,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           {hasRecommendationCard &&
             recommendations.map((recommendation) => (
               <RecommendationCard
-                key={recommendation.id}
+                key={recommendation.id ?? `${recommendation.name}-${recommendation.platform}`}
                 recommendation={recommendation}
                 onCompare={onCompare}
                 onAddToPlan={onAddToPlan}

@@ -14,6 +14,7 @@ const AssistantPage: React.FC = () => {
     handleOptimizePlan, 
     handleSendMessage,
     clearConversation,
+     handleIncreaseQuantity, 
     handleCompare,
     handleRemoveFromPlan, 
     handleAddToPlan,
@@ -48,7 +49,7 @@ const AssistantPage: React.FC = () => {
       items={shoppingPlan}
 onOptimize= {handleOptimizePlan}
 onRemove={handleRemoveFromPlan}
-onAdd = {handleAddToPlan}
+onAdd = {handleIncreaseQuantity}
 
       
     />

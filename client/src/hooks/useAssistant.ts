@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useUser } from "../context/useUser";
 import { sendAssistantMessage } from "../services/assistant.service";
-
 import { compareProduct, optimizeCart } from "../api/productApi";
-
 import {
   INTENT_TYPES,
   type Message,
+  type Recommendation,
 } from "../components/assistant/assistant.types";
 import {
   createAssistantMessage,
@@ -145,9 +144,8 @@ export function useAssistant() {
     setShoppingPlan([]);
   };
 
-  const handleAddToPlan = (productName: string): void => {
-    const name = productName.trim().toLowerCase();
-
+  const handleAddToPlan = (recommendation : Recommendation): void => {
+  const name =recommendation.name.trim().toLowerCase() ; 
     if (!name) return;
 
     setShoppingPlan((previous) => {
@@ -159,7 +157,7 @@ export function useAssistant() {
         );
       }
 
-      return [...previous, { name, quantity: 1 }];
+      return [...previous, { name, quantity: 1 , offer: recommendation, }];
     });
 
     setMessages((previous) => [
@@ -209,7 +207,8 @@ export function useAssistant() {
   };
 
  const handleRemoveFromPlan = (productName: string): void => {
-  const name = productName.trim().toLowerCase();
+  // const name = productName.trim().toLowerCase();
+  const name = productName ; 
 
   setShoppingPlan((previous) =>
     previous
@@ -222,12 +221,29 @@ export function useAssistant() {
   );
 };
 
+const handleIncreaseQuantity = (productName: string): void => {
+  const name = productName.trim().toLowerCase();
+
+  if (!name) return;
+
+  setShoppingPlan((previous) =>
+    previous.map((item) =>
+      item.name === name
+        ? {
+            ...item,
+            quantity: item.quantity + 1,
+          }
+        : item
+    )
+  );
+};
   return {
     input,
     setInput,
     messages,
     isLoading,
     shoppingPlan,
+    handleIncreaseQuantity , 
     handleSendMessage,
     handleCompare,
     handleAddToPlan,

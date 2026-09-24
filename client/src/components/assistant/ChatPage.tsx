@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import LoadingBubble from './LoadingBubble';
-import {type  Message } from './assistant.types';
+import {type  Message, type Recommendation } from './assistant.types';
 
 interface ChatPageProps {
   messages: Message[];
@@ -10,7 +10,7 @@ interface ChatPageProps {
   onBack: () => void;
   onClear?: () => void; 
   onCompare : (productName : string) => void ; 
-onAddToPlan: (productName: string) => void;
+onAddToPlan: (recommendation :Recommendation) => void;
 }
 
 const ChatPage: React.FC<ChatPageProps> = ({

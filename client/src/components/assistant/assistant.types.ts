@@ -69,13 +69,20 @@ export type MessageType =
 
 
  export interface Recommendation {
-    id: string;
-    name: string; 
-    brand?: string;
-    price: number;
-    reason: string;
-    pros?: string[];
-    tradeOff?: string;
-    platform?: string;
+   id?: string | null;
+  name: string;
+  brand?: string;
+  price: number;
+  reason: string;
+  pros?: string[];
+  tradeOff?: string;
+  platform?: string;
+
+  delivery?: string | null;
+  rating?: number | null;
+  reviews?: number | null;
+  productLink?: string | null;
+  image?: string | null;
+  source?: "serpapi" | "mongodb";
   }
   

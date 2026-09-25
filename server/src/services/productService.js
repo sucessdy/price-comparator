@@ -97,39 +97,27 @@ exports.compareProducts = async (productNames) => {
 // ======================================================
 // OPTIMIZE CART
 // ======================================================
+// ======================================================
+// OPTIMIZE CART
+// ======================================================
 
 exports.optimizeCart = async (products) => {
-  if (!Array.isArray(products) || products.length === 0) {
-    throw new ValidationError("Shopping plan is empty");
-  }
-
   // ------------------------------------------------------
-  // NORMALIZE CART INPUT
+  // 1. Normalize cart input + merge duplicate products
   // ------------------------------------------------------
 
   const productsByNameInput = new Map();
 
   products.forEach((product) => {
-    const isString = typeof product === "string";
+    const name = (typeof product === "string" ? product : product.name)
+      .trim()
+      .toLowerCase();
 
-    const rawName = isString ? product : product?.name;
+    const quantity =
+      typeof product === "string" ? 1 : product.quantity || 1;
 
-    if (!rawName || typeof rawName !== "string") {
-      return;
-    }
-
-    const name = rawName.trim().toLowerCase();
-
-    if (!name) return;
-
-    const quantity = isString
-      ? 1
-      : Number.isFinite(Number(product?.quantity)) &&
-        Number(product.quantity) > 0
-      ? Number(product.quantity)
-      : 1;
-
-    const offer = isString ? null : product?.offer ?? null;
+    const offer =
+      typeof product === "string" ? null : product.offer ?? null;
 
     if (!productsByNameInput.has(name)) {
       productsByNameInput.set(name, {
@@ -148,78 +136,67 @@ exports.optimizeCart = async (products) => {
     }
   });
 
-  const normalizedProducts = Array.from(
-    productsByNameInput.values()
-  );
-
-  if (!normalizedProducts.length) {
-    throw new ValidationError("No valid products found in shopping plan");
-  }
-
-  // ------------------------------------------------------
-  // GET OFFERS FROM BOTH SOURCES
-  // ------------------------------------------------------
+  const normalizedProducts = Array.from(productsByNameInput.values());
 
   const names = normalizedProducts.map((product) => product.name);
 
-  // Persistent offers
+  // ------------------------------------------------------
+  // 2. Get offers from both sources
+  // ------------------------------------------------------
+
   const mongoOffers = await getMongoOffers(names);
 
-  // Live offers stored in the shopping plan
-  const liveOffers = normalizedProducts.flatMap((product) =>
-    product.offers.map((offer) => createOffer(offer))
+  const liveOffers = normalizedProducts.flatMap(
+    (product) => product.offers
   );
 
-  // MongoDB + live SerpApi offers
-  const allItems = [...mongoOffers, ...liveOffers];
-
-  if (!allItems.length) {
-    throw new NotFoundError("Products");
-  }
-
   // ------------------------------------------------------
-  // NORMALIZE OFFER DATA
+  // 3. Group offers by CART PRODUCT NAME
   // ------------------------------------------------------
-
-  const normalizedOffers = allItems
-    .filter(
-      (item) =>
-        item &&
-        typeof item.name === "string" &&
-        item.name.trim() &&
-        typeof item.platform === "string" &&
-        item.platform.trim() &&
-        Number.isFinite(Number(item.price)) &&
-        Number(item.price) >= 0
-    )
-    .map((item) => ({
-      ...item,
-      name: item.name.trim().toLowerCase(),
-      platform: item.platform.trim().toLowerCase(),
-      price: Number(item.price),
-    }));
-
-  if (!normalizedOffers.length) {
-    throw new NotFoundError("Valid product offers");
-  }
-
-  // ------------------------------------------------------
-  // GROUP OFFERS BY PRODUCT NAME
-  // ------------------------------------------------------
+  // Important:
+  // Cart name and SerpApi title may not be exactly the same.
+  // Example:
+  // cart = "kratos n1"
+  // live  = "Kratos N1 Neckband Bluetooth Headphones..."
 
   const productsByName = {};
 
-  normalizedOffers.forEach((item) => {
-    if (!productsByName[item.name]) {
-      productsByName[item.name] = [];
-    }
-
-    productsByName[item.name].push(item);
+  normalizedProducts.forEach((product) => {
+    productsByName[product.name] = [];
   });
 
-  // ------------------------------------------------------
+  // Add MongoDB offers
+  mongoOffers.forEach((offer) => {
+    const productName = offer.name.trim().toLowerCase();
+
+    if (!productsByName[productName]) {
+      productsByName[productName] = [];
+    }
+
+    productsByName[productName].push(offer);
+  });
+
+  // Add live offers back to the cart product they came from
+  normalizedProducts.forEach((product) => {
+    if (product.offers.length > 0) {
+      productsByName[product.name].push(...product.offers);
+    }
+  });
+
+  const allItems = [...mongoOffers, ...liveOffers];
+
+  console.log("🗄️ MongoDB offers:", mongoOffers);
+  console.log("🌐 Live offers:", liveOffers);
+  console.log("📦 All offers:", allItems);
+  console.log("🧩 Offers grouped by cart product:", productsByName);
+
+  if (allItems.length === 0) {
+    throw new NotFoundError("Products");
+  }
+
+  // ======================================================
   // SPLIT CART STRATEGY
-  // ------------------------------------------------------
+  // ======================================================
 
   const splitItems = {};
   const missingProducts = [];
@@ -229,10 +206,9 @@ exports.optimizeCart = async (products) => {
     const productName = cartItem.name;
     const quantity = cartItem.quantity;
 
-    const availableProducts =
-      productsByName[productName] || [];
+    const availableProducts = productsByName[productName] || [];
 
-    if (!availableProducts.length) {
+    if (availableProducts.length === 0) {
       splitItems[productName] = {
         available: false,
         message: "Not found",
@@ -242,14 +218,11 @@ exports.optimizeCart = async (products) => {
       continue;
     }
 
-    const cheapestProduct = availableProducts.reduce(
-      (min, current) =>
-        current.price < min.price ? current : min
+    const cheapestProduct = availableProducts.reduce((min, current) =>
+      current.price < min.price ? current : min
     );
 
-    const productCost =
-      cheapestProduct.price * quantity;
-
+    const productCost = cheapestProduct.price * quantity;
     const platform = cheapestProduct.platform;
 
     splitItems[productName] = {
@@ -259,7 +232,6 @@ exports.optimizeCart = async (products) => {
       quantity,
       productCost,
       finalCost: productCost,
-      source: cheapestProduct.source,
     };
 
     if (!splitOrdersByPlatform[platform]) {
@@ -268,74 +240,61 @@ exports.optimizeCart = async (products) => {
       };
     }
 
-    splitOrdersByPlatform[platform].productCost +=
-      productCost;
+    splitOrdersByPlatform[platform].productCost += productCost;
   }
 
-  // ------------------------------------------------------
-  // SPLIT CART TOTALS
-  // ------------------------------------------------------
+  const splitOrderTotals = Object.entries(splitOrdersByPlatform).map(
+    ([platform, order]) => {
+      const calculation = platformConfig[platform]
+        ? calculateFinalCost(order.productCost, platformConfig[platform])
+        : {
+            total: order.productCost,
+            breakdown: null,
+          };
 
-  const splitOrderTotals = Object.entries(
-    splitOrdersByPlatform
-  ).map(([platform, order]) => {
-    const config = platformConfig[platform];
+      return {
+        platform,
+        productCost: order.productCost,
+        totalCost: calculation.total,
+        feeBreakdown: calculation.breakdown,
+      };
+    }
+  );
 
-    const calculation = config
-      ? calculateFinalCost(order.productCost, config)
-      : {
-          total: order.productCost,
-          breakdown: null,
-        };
+  const splitTotalProductCost = splitOrderTotals.reduce(
+    (total, order) => total + order.productCost,
+    0
+  );
 
-    return {
-      platform,
-      productCost: order.productCost,
-      totalCost: calculation.total,
-      feeBreakdown: calculation.breakdown,
-    };
-  });
+  const splitTotalFinalCost = splitOrderTotals.reduce(
+    (total, order) => total + order.totalCost,
+    0
+  );
 
-  const splitTotalProductCost =
-    splitOrderTotals.reduce(
-      (total, order) =>
-        total + order.productCost,
-      0
-    );
-
-  const splitTotalFinalCost =
-    splitOrderTotals.reduce(
-      (total, order) =>
-        total + order.totalCost,
-      0
-    );
-
-  // ------------------------------------------------------
+  // ======================================================
   // SINGLE PLATFORM STRATEGY
-  // ------------------------------------------------------
+  // ======================================================
+
+  // IMPORTANT:
+  // Build this using cart product names as the identity,
+  // not the raw SerpApi title.
 
   const platformMap = {};
 
-  normalizedOffers.forEach((item) => {
-    const platform = item.platform;
-    const productName = item.name;
+  for (const cartItem of normalizedProducts) {
+    const productName = cartItem.name;
+    const availableProducts = productsByName[productName] || [];
 
-    if (!platformMap[platform]) {
-      platformMap[platform] = {};
-    }
+    availableProducts.forEach((item) => {
+      const platform = item.platform;
 
-    const existingOffer =
-      platformMap[platform][productName];
+      if (!platformMap[platform]) {
+        platformMap[platform] = {};
+      }
 
-    // Keep the cheapest offer when multiple
-    // sources have the same product/platform.
-    if (
-      !existingOffer ||
-      item.price < existingOffer.price
-    ) {
       platformMap[platform][productName] = item;
-    }
-  });
+    });
+  }
 
   let bestPlatform = null;
   let lowestPlatformCost = Infinity;
@@ -351,76 +310,65 @@ exports.optimizeCart = async (products) => {
       const productName = cartItem.name;
       const quantity = cartItem.quantity;
 
-      const offer =
-        platformMap[platform][productName];
+      const offer = platformMap[platform][productName];
 
       if (!offer) {
         hasAllProducts = false;
         break;
       }
 
-      totalProductCost +=
-        offer.price * quantity;
+      totalProductCost += offer.price * quantity;
     }
 
-    if (!hasAllProducts) {
-      continue;
-    }
+    if (hasAllProducts) {
+      const config = platformConfig[platform];
 
-    const config = platformConfig[platform];
+      let finalCost = totalProductCost;
+      let breakdown = null;
 
-    let finalCost = totalProductCost;
-    let breakdown = null;
+      if (config) {
+        const calculation = calculateFinalCost(
+          totalProductCost,
+          config
+        );
 
-    if (config) {
-      const calculation = calculateFinalCost(
-        totalProductCost,
-        config
-      );
+        finalCost = calculation.total;
+        breakdown = calculation.breakdown;
+      }
 
-      finalCost = calculation.total;
-      breakdown = calculation.breakdown;
-    }
-
-    alternatives.push({
-      platform,
-      totalCost: finalCost,
-      productCost: totalProductCost,
-      feeBreakdown: breakdown,
-    });
-
-    if (finalCost < lowestPlatformCost) {
-      lowestPlatformCost = finalCost;
-      bestPlatform = platform;
-
-      bestPlatformBreakdown = {
-        productCost: totalProductCost,
-        finalCost,
-        breakdown,
+      alternatives.push({
         platform,
-      };
+        totalCost: finalCost,
+        productCost: totalProductCost,
+        feeBreakdown: breakdown,
+      });
+
+      if (finalCost < lowestPlatformCost) {
+        lowestPlatformCost = finalCost;
+        bestPlatform = platform;
+
+        bestPlatformBreakdown = {
+          productCost: totalProductCost,
+          finalCost,
+          breakdown,
+          platform,
+        };
+      }
     }
   }
 
-  // ------------------------------------------------------
-  // RECOMMEND STRATEGY
-  // ------------------------------------------------------
+  // ======================================================
+  // RECOMMEND BEST STRATEGY
+  // ======================================================
 
-  const splitCartAvailable =
-    normalizedProducts.length > 0 &&
-    Object.keys(splitItems).length ===
-      normalizedProducts.length &&
-    Object.values(splitItems).every(
-      (item) => item.available
-    );
+  const splitCartAvailable = Object.values(splitItems).every(
+    (item) => item.available
+  );
 
   let recommended = null;
 
   if (bestPlatform && splitCartAvailable) {
-    if (
-      splitTotalFinalCost <
-      lowestPlatformCost
-    ) {
+    if (splitTotalFinalCost < lowestPlatformCost) {
       recommended = {
         strategy: "split-cart",
         totalCost: splitTotalFinalCost,
@@ -432,10 +380,8 @@ exports.optimizeCart = async (products) => {
         strategy: "single-platform",
         platform: bestPlatform,
         totalCost: lowestPlatformCost,
-        productCost:
-          bestPlatformBreakdown.productCost,
-        feeBreakdown:
-          bestPlatformBreakdown.breakdown,
+        productCost: bestPlatformBreakdown.productCost,
+        feeBreakdown: bestPlatformBreakdown.breakdown,
       };
     }
   } else if (bestPlatform) {
@@ -443,10 +389,8 @@ exports.optimizeCart = async (products) => {
       strategy: "single-platform",
       platform: bestPlatform,
       totalCost: lowestPlatformCost,
-      productCost:
-        bestPlatformBreakdown.productCost,
-      feeBreakdown:
-        bestPlatformBreakdown.breakdown,
+      productCost: bestPlatformBreakdown.productCost,
+      feeBreakdown: bestPlatformBreakdown.breakdown,
     };
   } else if (splitCartAvailable) {
     recommended = {
@@ -457,93 +401,73 @@ exports.optimizeCart = async (products) => {
     };
   }
 
-  // ------------------------------------------------------
-  // CALCULATE SAVINGS
-  // ------------------------------------------------------
+  // ======================================================
+  // SAVINGS
+  // ======================================================
 
   let savings = 0;
 
   if (bestPlatform && splitCartAvailable) {
     savings = Math.abs(
-      lowestPlatformCost -
-        splitTotalFinalCost
+      lowestPlatformCost - splitTotalFinalCost
     );
 
-    savings = Number(
-      savings.toFixed(2)
-    );
+    savings = Number(savings.toFixed(2));
   }
 
-  // ------------------------------------------------------
-  // BUILD SHOPPING PLAN
-  // ------------------------------------------------------
+  // ======================================================
+  // SHOPPING PLAN
+  // ======================================================
 
   const shoppingPlan = [];
 
   if (
     recommended &&
-    recommended.strategy ===
-      "single-platform" &&
+    recommended.strategy === "single-platform" &&
     bestPlatform
   ) {
     for (const cartItem of normalizedProducts) {
       const offer =
-        platformMap[bestPlatform]?.[
-          cartItem.name
-        ];
+        platformMap[bestPlatform]?.[cartItem.name];
 
-      if (!offer) {
-        continue;
+      if (offer) {
+        shoppingPlan.push({
+          product: cartItem.name,
+          platform: bestPlatform,
+          quantity: cartItem.quantity,
+          price: offer.price,
+          totalPrice: offer.price * cartItem.quantity,
+        });
       }
-
-      shoppingPlan.push({
-        product: cartItem.name,
-        platform: offer.platform,
-        quantity: cartItem.quantity,
-        price: offer.price,
-        totalPrice:
-          offer.price * cartItem.quantity,
-        productCost:
-          offer.price * cartItem.quantity,
-        source: offer.source,
-      });
     }
   } else if (
     recommended &&
-    recommended.strategy ===
-      "split-cart"
+    recommended.strategy === "split-cart"
   ) {
-    for (const [
-      productName,
-      details,
-    ] of Object.entries(splitItems)) {
-      if (!details.available) {
-        continue;
+    for (const [productName, details] of Object.entries(
+      splitItems
+    )) {
+      if (details.available) {
+        shoppingPlan.push({
+          product: productName,
+          platform: details.platform,
+          quantity: details.quantity,
+          price: details.price,
+          totalPrice: details.productCost,
+          productCost: details.productCost,
+        });
       }
-
-      shoppingPlan.push({
-        product: productName,
-        platform: details.platform,
-        quantity: details.quantity,
-        price: details.price,
-        totalPrice: details.productCost,
-        productCost: details.productCost,
-        source: details.source,
-      });
     }
   }
 
-  // ------------------------------------------------------
-  // SORT ALTERNATIVES
-  // ------------------------------------------------------
-
+  // Sort alternatives cheapest first
   alternatives.sort(
     (a, b) => a.totalCost - b.totalCost
   );
 
-  // ------------------------------------------------------
-  // RETURN RESULT
-  // ------------------------------------------------------
+  // ======================================================
+  // RETURN
+  // ======================================================
 
   return {
     recommended,
@@ -553,18 +477,12 @@ exports.optimizeCart = async (products) => {
     alternatives,
 
     summary: {
-      totalItems:
-        normalizedProducts.reduce(
-          (sum, product) =>
-            sum + product.quantity,
-          0
-        ),
-
-      uniqueProducts:
-        productsByNameInput.size,
-
-      platformsConsidered:
-        Object.keys(platformMap).length,
+      totalItems: normalizedProducts.reduce(
+        (sum, product) => sum + product.quantity,
+        0
+      ),
+      uniqueProducts: normalizedProducts.length,
+      platformsConsidered: Object.keys(platformMap).length,
     },
   };
 };

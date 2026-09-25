@@ -28,13 +28,11 @@ exports.recommendationService = async ({ category, budget, priority }) => {
 
   filteredProducts.sort((a, b) => a.price - b.price);
 
-  return filteredProducts.slice(0, 3).map((product) => ({
+  return filteredProducts.slice(0, 5).map((product) => ({
     id: product._id ?? null,
   ...createOffer(product) ,
 
-    // name: product.name,
-    // price: product.price,
-    // platform: product.platform,
+ 
   
     reason: `Fits your ${category} requirement${
       budget ? ` and stays within ₹${budget}` : ""

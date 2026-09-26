@@ -2,21 +2,25 @@ const productRepository = require("../repositories/productRepository");
 const platformConfig = require("../config/platformConfig");
 const calculateFinalCost = require("../utils/calculateFinalCost");
 const { NotFoundError, ValidationError } = require("../errors/AppError");
-const {getMongoOffers , createOffer} =require("./offer/offerService") ; 
+const { getMongoOffers, createOffer } = require("./offer/offerService");
+const searchProduct = require("./search/searchServices");
 
 // ======================================================
 // ADD OR UPDATE PRODUCT
 // ======================================================
 
-exports.addOrUpdateProduct = async ({ name, price, platform , category }) => {
-  const existing = await productRepository.findByNameAndPlatform(name, platform);
+exports.addOrUpdateProduct = async ({ name, price, platform, category }) => {
+  const existing = await productRepository.findByNameAndPlatform(
+    name,
+    platform,
+  );
 
   if (existing) {
     const updatedProduct = await productRepository.updatePriceWithHistory(
       name,
       platform,
       price,
-      existing.price
+      existing.price,
     );
 
     return {
@@ -30,7 +34,7 @@ exports.addOrUpdateProduct = async ({ name, price, platform , category }) => {
     name,
     price,
     platform,
-    category
+    category,
   });
 
   return {
@@ -43,47 +47,109 @@ exports.addOrUpdateProduct = async ({ name, price, platform , category }) => {
 // COMPARE PRODUCT PRICES
 // ======================================================
 
+// exports.compareProduct = async (productName) => {
+//   if (!productName || !productName.trim()) {
+//     throw new ValidationError("Product name is required");
+//   }
+
+//   const products = await productRepository.findByName(productName);
+
+//   if (!products.length) {
+//     throw new NotFoundError(`Product "${productName}" not found.`);
+//   }
+
+//   const prices = {};
+//   let cheapestPlatform = null;
+//   let lowestPrice = Infinity;
+
+//   products.forEach((product) => {
+//     prices[product.platform] = product.price;
+
+//     if (product.price < lowestPrice) {
+//       lowestPrice = product.price;
+//       cheapestPlatform = product.platform;
+//     }
+//   });
+
+//   return {
+//     product: productName.trim().toLowerCase(),
+//     prices,
+//     cheapest: {
+//       platform: cheapestPlatform,
+//       price: lowestPrice,
+//     },
+//   };
+// };
+
 exports.compareProduct = async (productName) => {
-  if (!productName ||  !productName.trim()) {
+  if (!productName || !productName.trim()) {
     throw new ValidationError("Product name is required");
   }
 
-  const products = await productRepository.findByName(productName);
+  const normalizedName = productName.trim().toLowerCase();
 
-  if (!products.length ) {
-    throw new NotFoundError(`Product "${productName}" not found.`);s
+  // MongoDB offers
+  const mongoProducts = await productRepository.findByName(normalizedName);
+
+  const mongoOffers = mongoProducts.map((product) =>
+    createOffer({
+      name: product.name,
+      platform: product.platform,
+      price: product.price,
+      source: "mongodb",
+    })
+  );
+
+  // Live SerpApi offers
+  const liveOffers = await searchProduct(normalizedName);
+
+  const allOffers = [...mongoOffers, ...liveOffers];
+
+  if (!allOffers.length) {
+    throw new NotFoundError(
+      `Product "${productName}" not found.`
+    );
   }
 
+  // Keep one current price per platform.
+  // Live data is added after MongoDB, so it replaces
+  // the MongoDB price for the same platform.
   const prices = {};
+
   let cheapestPlatform = null;
   let lowestPrice = Infinity;
 
-  products.forEach((product) => {
-    prices[product.platform] = product.price;
+  allOffers.forEach((offer) => {
+    const platform = offer.platform;
+    const price = offer.price;
 
-    if (product.price < lowestPrice) {
-      lowestPrice = product.price;
-      cheapestPlatform = product.platform;
+    if (price == null) return;
+
+    prices[platform] = price;
+
+    if (price < lowestPrice) {
+      lowestPrice = price;
+      cheapestPlatform = platform;
     }
   });
 
   return {
-    product: productName.trim().toLowerCase(),
+    product: normalizedName,
     prices,
     cheapest: {
       platform: cheapestPlatform,
       price: lowestPrice,
     },
+    offers: allOffers,
   };
 };
-
 exports.compareProducts = async (productNames) => {
   if (productNames.length < 2) {
     throw new Error("compareProducts requires at least 2 products");
   }
 
   const result = await Promise.all(
-    productNames.map((name) => exports.compareProduct(name))
+    productNames.map((name) => exports.compareProduct(name)),
   );
 
   return {
@@ -91,8 +157,6 @@ exports.compareProducts = async (productNames) => {
     details: result,
   };
 };
-
-
 
 // ======================================================
 // OPTIMIZE CART
@@ -113,11 +177,9 @@ exports.optimizeCart = async (products) => {
       .trim()
       .toLowerCase();
 
-    const quantity =
-      typeof product === "string" ? 1 : product.quantity || 1;
+    const quantity = typeof product === "string" ? 1 : product.quantity || 1;
 
-    const offer =
-      typeof product === "string" ? null : product.offer ?? null;
+    const offer = typeof product === "string" ? null : (product.offer ?? null);
 
     if (!productsByNameInput.has(name)) {
       productsByNameInput.set(name, {
@@ -146,18 +208,7 @@ exports.optimizeCart = async (products) => {
 
   const mongoOffers = await getMongoOffers(names);
 
-  const liveOffers = normalizedProducts.flatMap(
-    (product) => product.offers
-  );
-
-  // ------------------------------------------------------
-  // 3. Group offers by CART PRODUCT NAME
-  // ------------------------------------------------------
-  // Important:
-  // Cart name and SerpApi title may not be exactly the same.
-  // Example:
-  // cart = "kratos n1"
-  // live  = "Kratos N1 Neckband Bluetooth Headphones..."
+  const liveOffers = normalizedProducts.flatMap((product) => product.offers);
 
   const productsByName = {};
 
@@ -165,7 +216,6 @@ exports.optimizeCart = async (products) => {
     productsByName[product.name] = [];
   });
 
-  // Add MongoDB offers
   mongoOffers.forEach((offer) => {
     const productName = offer.name.trim().toLowerCase();
 
@@ -176,7 +226,6 @@ exports.optimizeCart = async (products) => {
     productsByName[productName].push(offer);
   });
 
-  // Add live offers back to the cart product they came from
   normalizedProducts.forEach((product) => {
     if (product.offers.length > 0) {
       productsByName[product.name].push(...product.offers);
@@ -219,7 +268,7 @@ exports.optimizeCart = async (products) => {
     }
 
     const cheapestProduct = availableProducts.reduce((min, current) =>
-      current.price < min.price ? current : min
+      current.price < min.price ? current : min,
     );
 
     const productCost = cheapestProduct.price * quantity;
@@ -258,26 +307,18 @@ exports.optimizeCart = async (products) => {
         totalCost: calculation.total,
         feeBreakdown: calculation.breakdown,
       };
-    }
+    },
   );
 
   const splitTotalProductCost = splitOrderTotals.reduce(
     (total, order) => total + order.productCost,
-    0
+    0,
   );
 
   const splitTotalFinalCost = splitOrderTotals.reduce(
     (total, order) => total + order.totalCost,
-    0
+    0,
   );
-
-  // ======================================================
-  // SINGLE PLATFORM STRATEGY
-  // ======================================================
-
-  // IMPORTANT:
-  // Build this using cart product names as the identity,
-  // not the raw SerpApi title.
 
   const platformMap = {};
 
@@ -327,10 +368,7 @@ exports.optimizeCart = async (products) => {
       let breakdown = null;
 
       if (config) {
-        const calculation = calculateFinalCost(
-          totalProductCost,
-          config
-        );
+        const calculation = calculateFinalCost(totalProductCost, config);
 
         finalCost = calculation.total;
         breakdown = calculation.breakdown;
@@ -357,12 +395,8 @@ exports.optimizeCart = async (products) => {
     }
   }
 
-  // ======================================================
-  // RECOMMEND BEST STRATEGY
-  // ======================================================
-
   const splitCartAvailable = Object.values(splitItems).every(
-    (item) => item.available
+    (item) => item.available,
   );
 
   let recommended = null;
@@ -408,9 +442,7 @@ exports.optimizeCart = async (products) => {
   let savings = 0;
 
   if (bestPlatform && splitCartAvailable) {
-    savings = Math.abs(
-      lowestPlatformCost - splitTotalFinalCost
-    );
+    savings = Math.abs(lowestPlatformCost - splitTotalFinalCost);
 
     savings = Number(savings.toFixed(2));
   }
@@ -427,8 +459,7 @@ exports.optimizeCart = async (products) => {
     bestPlatform
   ) {
     for (const cartItem of normalizedProducts) {
-      const offer =
-        platformMap[bestPlatform]?.[cartItem.name];
+      const offer = platformMap[bestPlatform]?.[cartItem.name];
 
       if (offer) {
         shoppingPlan.push({
@@ -440,13 +471,8 @@ exports.optimizeCart = async (products) => {
         });
       }
     }
-  } else if (
-    recommended &&
-    recommended.strategy === "split-cart"
-  ) {
-    for (const [productName, details] of Object.entries(
-      splitItems
-    )) {
+  } else if (recommended && recommended.strategy === "split-cart") {
+    for (const [productName, details] of Object.entries(splitItems)) {
       if (details.available) {
         shoppingPlan.push({
           product: productName,
@@ -460,10 +486,7 @@ exports.optimizeCart = async (products) => {
     }
   }
 
-  // Sort alternatives cheapest first
-  alternatives.sort(
-    (a, b) => a.totalCost - b.totalCost
-  );
+  alternatives.sort((a, b) => a.totalCost - b.totalCost);
 
   // ======================================================
   // RETURN
@@ -479,7 +502,7 @@ exports.optimizeCart = async (products) => {
     summary: {
       totalItems: normalizedProducts.reduce(
         (sum, product) => sum + product.quantity,
-        0
+        0,
       ),
       uniqueProducts: normalizedProducts.length,
       platformsConsidered: Object.keys(platformMap).length,

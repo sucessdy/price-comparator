@@ -2,6 +2,8 @@
 // BASE TYPES
 // ======================================================
 
+import type { Recommendation } from "../components/assistant/assistant.types";
+
 export interface Product {
   _id: string;
   name: string;
@@ -43,6 +45,8 @@ export interface PriceHistoryEntry {
 export interface CartItem {
   name: string;
   quantity: number;
+  offer?: Recommendation;
+  productKey?: string;
 }
 
 // ======================================================

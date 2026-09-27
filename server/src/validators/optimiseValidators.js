@@ -3,6 +3,7 @@ const Joi = require("joi");
 // Schema for cart optimization
 const offerSchema = Joi.object({
   id: Joi.string().allow(null).optional(),
+  // productKey: Joi.string().trim().min(1).optional(),
   name: Joi.string().trim().min(1).required(),
   platform: Joi.string().trim().min(1).required(),
   price: Joi.number().min(0).required(),
@@ -26,7 +27,7 @@ const optimiseCartSchema = Joi.object({
 
         Joi.object({
           name: Joi.string().trim().min(1).required(),
-
+productKey: Joi.string().trim().min(1).optional(),
           quantity: Joi.number()
             .integer()
             .min(1)

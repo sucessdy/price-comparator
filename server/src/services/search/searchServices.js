@@ -19,12 +19,12 @@ async function searchProduct(query) {
   }
 
   console.log("Redis miss");
-  const result = await searchShopping(query);
+  const result = await searchShopping(query , true);
 
   const products = result.map(normalizedProduct).map(createOffer);
 
   await client.set(cacheKey, JSON.stringify(products), {
-    EX: 700,
+    EX: 900,
   });
 
   return products;

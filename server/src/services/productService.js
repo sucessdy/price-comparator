@@ -4,7 +4,7 @@ const calculateFinalCost = require("../utils/calculateFinalCost");
 const { NotFoundError, ValidationError } = require("../errors/AppError");
 const { getMongoOffers, createOffer } = require("./offer/offerService");
 const searchProduct = require("./search/searchServices");
-
+const searchShopping = require("./search/serpApiProvider")
 // ======================================================
 // ADD OR UPDATE PRODUCT
 // ======================================================
@@ -43,43 +43,6 @@ exports.addOrUpdateProduct = async ({ name, price, platform, category }) => {
   };
 };
 
-// ======================================================
-// COMPARE PRODUCT PRICES
-// ======================================================
-
-// exports.compareProduct = async (productName) => {
-//   if (!productName || !productName.trim()) {
-//     throw new ValidationError("Product name is required");
-//   }
-
-//   const products = await productRepository.findByName(productName);
-
-//   if (!products.length) {
-//     throw new NotFoundError(`Product "${productName}" not found.`);
-//   }
-
-//   const prices = {};
-//   let cheapestPlatform = null;
-//   let lowestPrice = Infinity;
-
-//   products.forEach((product) => {
-//     prices[product.platform] = product.price;
-
-//     if (product.price < lowestPrice) {
-//       lowestPrice = product.price;
-//       cheapestPlatform = product.platform;
-//     }
-//   });
-
-//   return {
-//     product: productName.trim().toLowerCase(),
-//     prices,
-//     cheapest: {
-//       platform: cheapestPlatform,
-//       price: lowestPrice,
-//     },
-//   };
-// };
 
 exports.compareProduct = async (productName) => {
   if (!productName || !productName.trim()) {
@@ -101,7 +64,7 @@ exports.compareProduct = async (productName) => {
   );
 
   // Live SerpApi offers
-  const liveOffers = await searchProduct(normalizedName);
+  const liveOffers = await searchProduct(normalizedName , true) ;
 
   const allOffers = [...mongoOffers, ...liveOffers];
 
@@ -111,9 +74,7 @@ exports.compareProduct = async (productName) => {
     );
   }
 
-  // Keep one current price per platform.
-  // Live data is added after MongoDB, so it replaces
-  // the MongoDB price for the same platform.
+
   const prices = {};
 
   let cheapestPlatform = null;
@@ -124,14 +85,22 @@ exports.compareProduct = async (productName) => {
     const price = offer.price;
 
     if (price == null) return;
-
+ if (prices[platform]== null || price < prices[platform]) { 
     prices[platform] = price;
+ }
+
+
 
     if (price < lowestPrice) {
       lowestPrice = price;
       cheapestPlatform = platform;
     }
   });
+
+
+  const sortedOffers =[...allOffers].sort(
+    (a, b) => a.price -b.price)
+;
 
   return {
     product: normalizedName,
@@ -140,7 +109,7 @@ exports.compareProduct = async (productName) => {
       platform: cheapestPlatform,
       price: lowestPrice,
     },
-    offers: allOffers,
+    offers: sortedOffers,
   };
 };
 exports.compareProducts = async (productNames) => {
@@ -158,18 +127,9 @@ exports.compareProducts = async (productNames) => {
   };
 };
 
-// ======================================================
-// OPTIMIZE CART
-// ======================================================
-// ======================================================
-// OPTIMIZE CART
-// ======================================================
 
 exports.optimizeCart = async (products) => {
-  // ------------------------------------------------------
-  // 1. Normalize cart input + merge duplicate products
-  // ------------------------------------------------------
-
+ 
   const productsByNameInput = new Map();
 
   products.forEach((product) => {

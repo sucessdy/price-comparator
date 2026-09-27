@@ -3,7 +3,7 @@ const platformConfig = {
   blinkit: {
     deliveryFee: 25,
     platformFee: 8,
-    freeDeliveryAbove: 499,
+    freeDeliveryAbove: 200,
     trustScore: 4.5,
     avgDeliveryTime: 15, // minutes
   },
@@ -17,14 +17,14 @@ const platformConfig = {
   amazon: {
     deliveryFee: 40,
     platformFee: 0,
-    freeDeliveryAbove: 999,
+    freeDeliveryAbove: 400,
     trustScore: 4.8,
     avgDeliveryTime: 120,
   },
   flipkart: {
     deliveryFee: 40,
     platformFee: 0,
-    freeDeliveryAbove: 999,
+    freeDeliveryAbove: 99,
     trustScore: 4.6,
     avgDeliveryTime: 96,
   },
@@ -38,7 +38,7 @@ const platformConfig = {
   myntra: {
     deliveryFee: 35,
     platformFee: 0,
-    freeDeliveryAbove: 799,
+    freeDeliveryAbove: 300,
     trustScore: 4.2,
     avgDeliveryTime: 72,
   },
@@ -80,14 +80,14 @@ const platformConfig = {
   jiomart: {
     deliveryFee: 30,
     platformFee: 0,
-    freeDeliveryAbove: 599,
+    freeDeliveryAbove: 300,
     trustScore: 4.0,
     avgDeliveryTime: 144,
   },
   "paytm mall": {
     deliveryFee: 40,
     platformFee: 0,
-    freeDeliveryAbove: 999,
+    freeDeliveryAbove: 789,
     trustScore: 3.8,
     avgDeliveryTime: 120,
   },

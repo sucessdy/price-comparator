@@ -5,6 +5,7 @@ function createOffer(data) {
   return {
     name: data.name,
     platform: data.platform,
+    productKey : data.productKey ?? null , 
     price: data.price,
     delivery: data.delivery ?? null,
     rating: data.rating ?? null,
@@ -22,6 +23,7 @@ async function getMongoOffers (names) {
         name : product.name, 
         platform : product.platform, 
         price : product.price, 
+        productKey : product.productKey , 
         source: "mongodb"
     }))
 }

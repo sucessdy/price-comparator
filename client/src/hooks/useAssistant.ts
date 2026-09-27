@@ -157,7 +157,7 @@ export function useAssistant() {
         );
       }
 
-      return [...previous, { name, quantity: 1 , offer: recommendation, }];
+      return [...previous, { name, quantity: 1 , productKey: recommendation.productKey ?? name,  offer: recommendation, }];
     });
 
     setMessages((previous) => [

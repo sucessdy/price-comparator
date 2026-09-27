@@ -20,22 +20,90 @@ exports.recommendationService = async ({ category, budget, priority }) => {
     (product) => budget == null || product.price <= budget
   );
 
+
+
   if (!filteredProducts.length) {
     throw new NotFoundError(
       `Products in "${category}" within your budget not found`
     );
   }
 
-  filteredProducts.sort((a, b) => a.price - b.price);
+  const uniqueProducts = [] ; 
+  const seen = new Set() ; 
+  for (const product of filteredProducts) { 
+    const key = `${product.name.trim().toLowerCase()}-${(
+    product.platform || ""
 
-  return filteredProducts.slice(0, 5).map((product) => ({
-    id: product._id ?? null,
-  ...createOffer(product) ,
+  ).trim().toLowerCase() }`
+  if (seen.has(key)) { 
+    continue;
+  }
+  seen.add(key) ; 
+  uniqueProducts.push(product) ; 
 
- 
-  
-    reason: `Fits your ${category} requirement${
-      budget ? ` and stays within ₹${budget}` : ""
-    }.`,
-  }));
+  }
+
+// uniqueProducts.sort((a, b) => a.price - b.price);
+
+if (priority === "lowest-price") {
+  uniqueProducts.sort((a, b) => a.price - b.price);
+}
+
+if (priority === "quality") {
+  uniqueProducts.sort((a, b) => {
+    const ratingA = a.rating ?? 0;
+    const ratingB = b.rating ?? 0;
+
+    if (ratingB !== ratingA) {
+      return ratingB - ratingA;
+    }
+
+    const reviewsA = a.reviews ?? 0;
+    const reviewsB = b.reviews ?? 0;
+
+    if (reviewsB !== reviewsA) {
+      return reviewsB - reviewsA;
+    }
+
+    return a.price - b.price;
+  });
+}
+
+if (priority === "delivery") {
+  const getDeliveryScore = (delivery) => {
+    if (!delivery) return 0;
+
+    const value = delivery.toLowerCase();
+
+    if (value.includes("today")) return 3;
+    if (value.includes("tomorrow")) return 2;
+    if (value.includes("day")) return 1;
+
+    return 0;
+  };
+
+  uniqueProducts.sort((a, b) => {
+    const deliveryDifference =
+      getDeliveryScore(b.delivery) - getDeliveryScore(a.delivery);
+
+    if (deliveryDifference !== 0) {
+      return deliveryDifference;
+    }
+
+    return a.price - b.price;
+  });
+}
+
+if (!priority) {
+  uniqueProducts.sort((a, b) => a.price - b.price);
+}
+
+ return uniqueProducts.slice(0, 5).map((product) => ({
+  id: product._id ?? null,
+  productKey: category.trim().toLowerCase(),
+  ...createOffer(product),
+  reason: `Fits your ${category} requirement${
+    budget ? ` and stays within ₹${budget}` : ""
+  }.`,
+}));
 };

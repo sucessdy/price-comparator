@@ -1,24 +1,25 @@
-// server/src/utils/calculateFinalCost.js
 function calculateFinalCost(productCost, config) {
-  let total = productCost;
-  
+  const platformFee = config.platformFee || 0;
+  const deliveryFee = config.deliveryFee || 0;
+  const freeDeliveryAbove = config.freeDeliveryAbove ?? Infinity;
 
-  total += config.platformFee || 0;
-  
-  if (productCost < (config.freeDeliveryAbove || Infinity)) {
-    total += config.deliveryFee || 0;
+  const freeDeliveryApplied = productCost >= freeDeliveryAbove;
+
+  let total = productCost + platformFee;
+
+  if (!freeDeliveryApplied) {
+    total += deliveryFee;
   }
-  
+
   return {
-    total: total,
+    total,
     breakdown: {
-      productCost: productCost,
-      deliveryFee: productCost < config.freeDeliveryAbove ? (config.deliveryFee || 0) : 0,
-      platformFee: config.platformFee || 0,
-      freeDeliveryApplied: productCost >= (config.freeDeliveryAbove || Infinity)
-    }
+      productCost,
+      deliveryFee: freeDeliveryApplied ? 0 : deliveryFee,
+      platformFee,
+      freeDeliveryApplied,
+    },
   };
 }
-
 
 module.exports = calculateFinalCost;

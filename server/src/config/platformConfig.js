@@ -1,4 +1,20 @@
 // server/src/config/platformConfig.js
+function getPlatformConfig(platform) {
+  const normalized = platform.trim().toLowerCase(); 
+ const aliases = {
+  "amazon.in": "amazon",
+  amazon: "amazon",
+  flipkart: "flipkart",
+  "jiomart grocery": "jiomart",
+  jiomart: "jiomart",
+};
+
+  const key = aliases[normalized] ?? normalized ; 
+  return platformConfig[key] ?? null ; 
+
+
+}
+
 const platformConfig = {
   blinkit: {
     deliveryFee: 25,
@@ -114,4 +130,4 @@ const platformConfig = {
   },
 };
 
-module.exports = platformConfig;
+module.exports ={ platformConfig,  getPlatformConfig};

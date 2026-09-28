@@ -1,5 +1,5 @@
 const productRepository = require("../repositories/productRepository");
-const platformConfig = require("../config/platformConfig");
+const { getPlatformConfig} = require("../config/platformConfig");
 const calculateFinalCost = require("../utils/calculateFinalCost");
 const { NotFoundError, ValidationError } = require("../errors/AppError");
 const { getMongoOffers, createOffer } = require("./offer/offerService");
@@ -254,12 +254,20 @@ exports.optimizeCart = async (products) => {
 
   const splitOrderTotals = Object.entries(splitOrdersByPlatform).map(
     ([platform, order]) => {
-      const calculation = platformConfig[platform]
-        ? calculateFinalCost(order.productCost, platformConfig[platform])
-        : {
-            total: order.productCost,
-            breakdown: null,
-          };
+      // const calculation = getMongoOffers[platform]
+      //   ? calculateFinalCost(order.productCost, platformConfig[platform])
+      //   : {
+      //       total: order.productCost,
+      //       breakdown: null,
+      //     };
+      const config = getPlatformConfig(platform);
+
+const calculation = config
+  ? calculateFinalCost(order.productCost, config)
+  : {
+      total: order.productCost,
+      breakdown: null,
+    };
 
       return {
         platform,
@@ -322,7 +330,7 @@ exports.optimizeCart = async (products) => {
     }
 
     if (hasAllProducts) {
-      const config = platformConfig[platform];
+      const config = getPlatformConfig(platform);
 
       let finalCost = totalProductCost;
       let breakdown = null;
@@ -451,6 +459,20 @@ exports.optimizeCart = async (products) => {
   // ======================================================
   // RETURN
   // ======================================================
+console.log("🚀 OPTIMIZER RESULT:", {
+  recommended,
+  savings,
+  shoppingPlan,
+  alternatives,
+  summary: {
+    totalItems: normalizedProducts.reduce(
+      (sum, product) => sum + product.quantity,
+      0
+    ),
+    uniqueProducts: normalizedProducts.length,
+    platformsConsidered: Object.keys(platformMap).length,
+  },
+}); 
 
   return {
     recommended,

@@ -4,7 +4,7 @@ const calculateFinalCost = require("../utils/calculateFinalCost");
 const { NotFoundError, ValidationError } = require("../errors/AppError");
 const { getMongoOffers, createOffer } = require("./offer/offerService");
 const searchProduct = require("./search/searchServices");
-const searchShopping = require("./search/serpApiProvider")
+// const searchShopping = require("./search/serpApiProvider")
 // ======================================================
 // ADD OR UPDATE PRODUCT
 // ======================================================

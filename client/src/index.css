@@ -164,3 +164,48 @@ p {
   }
 }
 
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(var(--tw-rotate)); }
+  50% { transform: translateY(-15px) rotate(var(--tw-rotate)); }
+}
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px) rotate(var(--tw-rotate)); }
+  50% { transform: translateY(-15px) rotate(var(--tw-rotate)); }
+}
+@keyframes float-delayed-2 {
+  0%, 100% { transform: translateY(0px) rotate(var(--tw-rotate)); }
+  50% { transform: translateY(-15px) rotate(var(--tw-rotate)); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: float-delayed 7s ease-in-out infinite 1s;
+}
+.animate-float-delayed-2 {
+  animation: float-delayed-2 8s ease-in-out infinite 2s;
+}
+
+
+
+/* Smooth scrolling for the whole page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0F;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A2A35;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6C63FF;
+}

@@ -22,7 +22,7 @@ const loadSavedMessages = (): Message[] => {
       ...message,
       timestamp: message.timestamp ? new Date(message.timestamp) : undefined,
       status: message.status === "sending" ? "error" : message.status,
-    }));
+    }));  
   } catch {
     return [];
   }
@@ -33,7 +33,25 @@ export function useAssistant() {
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>(loadSavedMessages);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [shoppingPlan, setShoppingPlan] = useState<CartItem[]>([]);
+ const [shoppingPlan, setShoppingPlan] = useState<CartItem[]>(() => {
+  try {
+    const saved = localStorage.getItem("shoppingPlan");
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to load shopping plan:", error);
+  }
+
+  return [];
+});
+
+const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
 
   const handleCompare = async (productName: string): Promise<void> => {
     const name = productName.trim();
@@ -77,6 +95,22 @@ export function useAssistant() {
     }
     localStorage.setItem("chatConversation", JSON.stringify(messages));
   }, [messages]);
+
+  useEffect(() => {
+  try {
+    if (shoppingPlan.length === 0) {
+      localStorage.removeItem("shoppingPlan");
+      return;
+    }
+
+    localStorage.setItem(
+      "shoppingPlan",
+      JSON.stringify(shoppingPlan)
+    );
+  } catch (error) {
+    console.warn("Failed to save shopping plan:", error);
+  }
+}, [shoppingPlan]);
 
   const handleSendMessage = async (text: string): Promise<void> => {
     if (!text.trim() || isLoading) return;
@@ -172,43 +206,51 @@ export function useAssistant() {
     ]);
   };
 
-  const handleOptimizePlan = async (): Promise<void> => {
-    if (shoppingPlan.length === 0 || isLoading) return;
-    setIsLoading(true);
-    try {
-      const response = await optimizeCart(shoppingPlan);
-      const assistantResponse: AssistantResponse = {
-        message: `Here's the best way to buy your plan `,
-        priority: "lowest-total",
-        intent: INTENT_TYPES.OPTIMIZE_CART,
-        data: response.data,
-      };
-      const assistantMessage = createAssistantMessage(assistantResponse);
-      setMessages((prev) => [...prev, assistantMessage]);
-      setShoppingPlan([]);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to optimize this cart. Please try again.";
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          text: message,
-          sender: "assistant",
-          timestamp: new Date(),
-          status: "error",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const handleOptimizePlan = async (): Promise<void> => {
+  if (shoppingPlan.length === 0 || isOptimizing) return;
+
+  setIsOptimizing(true);
+
+  try {
+    const response = await optimizeCart(shoppingPlan);
+
+    const assistantResponse: AssistantResponse = {
+      message: `Here's the best way to buy your plan`,
+      priority: "lowest-total",
+      intent: INTENT_TYPES.OPTIMIZE_CART,
+      data: response.data,
+    };
+
+    const assistantMessage =
+      createAssistantMessage(assistantResponse);
+
+    setMessages((prev) => [...prev, assistantMessage]);
+
+    setShoppingPlan([]);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to optimize this cart. Please try again.";
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        text: message,
+        sender: "assistant",
+        timestamp: new Date(),
+        status: "error",
+      },
+    ]);
+  } finally {
+    setIsOptimizing(false);
+  }
+};
 
  const handleRemoveFromPlan = (productName: string): void => {
-  // const name = productName.trim().toLowerCase();
-  const name = productName ; 
+  const name = productName.trim().toLowerCase();
+  // const name = productName ; 
 
   setShoppingPlan((previous) =>
     previous
@@ -238,18 +280,18 @@ const handleIncreaseQuantity = (productName: string): void => {
   );
 };
   return {
-    input,
-    setInput,
-    messages,
-    isLoading,
-    shoppingPlan,
-    handleIncreaseQuantity , 
-    handleSendMessage,
-    handleCompare,
-    handleAddToPlan,
-    clearConversation,
-    handleOptimizePlan,
-
-    handleRemoveFromPlan,
+   input,
+  setInput,
+  messages,
+  isLoading,
+  isOptimizing,
+  shoppingPlan,
+  handleIncreaseQuantity,
+  handleSendMessage,
+  handleCompare,
+  handleAddToPlan,
+  clearConversation,
+  handleOptimizePlan,
+  handleRemoveFromPlan,
   };
 }

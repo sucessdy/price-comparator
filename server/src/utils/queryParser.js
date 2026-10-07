@@ -1,244 +1,153 @@
 // utils/queryParser.js
 
+// ======================================================
+// INTENTS
+// ======================================================
+
 const INTENT = {
-    COMPARE: "COMPARE",
-    OPTIMIZE_CART: "OPTIMIZE_CART",
-    SHOPPING_NEED: "SHOPPING_NEED",
-    GENERAL: "GENERAL",
-    UNKNOWN: "UNKNOWN",
+  COMPARE: "COMPARE",
+  OPTIMIZE_CART: "OPTIMIZE_CART",
+  SHOPPING_NEED: "SHOPPING_NEED",
+  GENERAL: "GENERAL",
+  UNKNOWN: "UNKNOWN",
 };
 
-const SHOPPING_WORDS = /\b(i'm|im|i|need|want|buy|get|find|looking|searching|for|me|please)\b/gi;
+// ======================================================
+// PATTERNS
+// ======================================================
+
+const SHOPPING_WORDS =
+  /\b(i'm|im|i|need|want|buy|get|find|looking|looking for|searching|searching for|show me|please|me)\b/gi;
 
 const BUDGET_PATTERNS = [
-    /(?:under|below|within|upto|up\s+to)\s*₹?\s*(\d+(?:\.\d+)?)/i,
-    /(?:budget\s*(?:is|of)?|for)\s*₹?\s*(\d+(?:\.\d+)?)/i,
+  /(?:under|below|within|upto|up\s+to)\s*₹?\s*(\d+(?:\.\d+)?)/i,
+
+  /(?:budget\s*(?:is|of)?|for)\s*₹?\s*(\d+(?:\.\d+)?)/i,
 ];
 
+// ======================================================
+// NORMALIZATION
+// ======================================================
 
-// ---------- DETECTION FUNCTIONS ----------
+function normalizeQuery(message = "") {
+  return message
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+
 
 function isGeneralQuery(query) {
-    const generalPattern = [
-        /^(hi|hello|hey)$/i,
-        /^(thanks|thank you)$/i,
-        /^what can you do$/i,
-        /^how are you$/i,
-        /^help$/i,
-    ];
-    return generalPattern.some((pattern) => pattern.test(query));
+  const generalPatterns = [
+    /^(hi|hello|hey)$/i,
+    /^(thanks|thank you)$/i,
+    /^what can you do$/i,
+    /^how are you$/i,
+    /^help$/i,
+  ];
+
+  return generalPatterns.some((pattern) => pattern.test(query));
 }
 
 function isComparisonQuery(query) {
-    // Check if user wants to compare products
-    const comparePatterns = [
-        /\bcompare\b/i,
-        /\bvs\b/i,
-        /\bversus\b/i,
-        /\bdifference between\b/i,
-        /\bwhich is better\b/i,
-        /\bprice (?:difference|comparison)\b/i,
-    ];
-    return comparePatterns.some((pattern) => pattern.test(query));
+  const comparePatterns = [
+    /\bcompare\b/i,
+    /\bvs\b/i,
+    /\bversus\b/i,
+    /\bdifference between\b/i,
+    /\bwhich is better\b/i,
+    /\bprice (?:difference|comparison)\b/i,
+  ];
+
+  return comparePatterns.some((pattern) => pattern.test(query));
 }
 
 function isOptimizationQuery(query) {
-    // Check if user wants to optimize their cart
-   const optimizePatterns = [
-        /\boptimize\b/i,
-        /\boptimise\b/i,
-        /\bshopping plan\b/i,
-        /\bcart\b/i,
-        /\bcheapest combination\b/i,
-        /\bcheapest way\b/i,
-    ];
+  const optimizePatterns = [
+    /\boptimize\b/i,
+    /\boptimise\b/i,
+    /\bshopping plan\b/i,
+    /\bcart\b/i,
+    /\bcheapest combination\b/i,
+    /\bcheapest way\b/i,
+  ];
 
-    return optimizePatterns.some((pattern) => pattern.test(query));
-}
-
-// ---------- EXTRACTION FUNCTIONS ----------
-
-function extractBudget(query) {
-    for (const pattern of BUDGET_PATTERNS) {
-        const match = query.match(pattern);
-        if (match) {
-            return Number(match[1]);
-        }
-    }
-    return null;
-}
-
-function extractProducts(query) {
-    const cleaned = query
-        .replace(
-            /^(compare|what.*compare|difference between|which is better)\s*/i,
-            "")
-        .replace(/\b(vs|versus)\b/gi, ",")
-        .replace(
-            /^(i|need|want|buy|get|find|show me|looking for|searching for)\s*/i,
-            ""
-        )
-        .replace(/under ₹?\d+(?:\.\d+)?/i, "")
-        .replace(/budget ₹?\d+(?:\.\d+)?/i, "")
-        .replace(/for ₹?\d+(?:\.\d+)?/i, "")
-        .replace(/\b(please|me|for|or)\b/gi, "")
-        .trim();
-
-    if (!cleaned) return [];
-
-    return cleaned
-         .split(/,|\band\b|\bvs\b|\bversus\b/i)
-        .map((item) => item.trim())
-        .filter(Boolean);
-}
-
-function extractCategory(query) {
-    // Remove budget and shopping words, keep the category
-    let category = query
-        .replace(BUDGET_PATTERNS[0], '')
-        .replace(BUDGET_PATTERNS[1], '')
-        .replace(SHOPPING_WORDS, '')
-        .replace(/₹?\s*\d+(?:\.\d+)?/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    // If category is too generic or empty, return null
-    if (!category || category.length < 2) {
-        return null;
-    }
-
-    return category;
-}
-
-// ---------- MAIN PARSER ----------
-
-function parseQuery(message = "") {
-    console.log("📝 Parsing Query:", message);
-      const query = message.trim(); 
-    const priority = extractPriority (query)
-  
-
-    // 1. Check for General queries
-    if (isGeneralQuery(query)) {
-        console.log("✅ GENERAL QUERY DETECTED");
-        return {
-            intent: INTENT.GENERAL,
-            products: [],
-            message: query,
-        };
-    }
-
-    // 2. Check for Comparison queries
-    if (isComparisonQuery(query)) {
-                console.log("✅ COMPARE QUERY DETECTED");
-        const products = extractProducts(query);
-        if (products.length > 0) {
-            return {
-                intent: INTENT.COMPARE,
-                products: products,
-                message: query,
-            };
-        }
-              
-        // If comparison query but not enough products, treat as general
-        return {
-            
-            intent: INTENT.GENERAL,
-            products: [],
-            message: query,
-        };
-    }
-
-    // 3. Check for Optimization queries
-    if (isOptimizationQuery(query) || query.includes('cart') || query.includes('plan')) {
-                console.log("✅ OPTIMSE QUERY DETECTED");
-        const products = extractProducts(query);
-        return {
-            intent: INTENT.OPTIMIZE_CART,
-            products: products.length > 0 ? products : [],
-            message: query,
-        };
-    }
-
-    // 4. Check for Shopping Need with budget
-    const budget = extractBudget(query);
-    if (budget !== null) {
-        const category = extractCategory(query);
-        if (category) {
-            return {
-                intent: INTENT.SHOPPING_NEED,
-                products: [],
-                category: category,
-                budget: budget,
-                priority,
-                message: query,
-            };
-        }
-    }
-
-    // 5. General Shopping Need (no budget)
-    if (isShoppingQuery(query)) {
-        const products = extractProducts(query);
-        const category = extractCategory(query);
-        
-        if (products.length > 0) {
-            // If specific products mentioned, treat as product search
-            return {
-                intent: INTENT.SHOPPING_NEED,
-                products: products,
-                category: category || 'products',
-                budget: null,
-                message: query,
-            };
-        } else if (category) {
-            // If only category mentioned
-            return {
-                intent: INTENT.SHOPPING_NEED,
-                products: [],
-                category: category,
-                budget: null,
-                message: query,
-            };
-        }
-    }
-
-    // 6. Extract products from general query
-    const products = extractProducts(query);
-    if (products.length > 0) {
-        // If single product, could be comparison or shopping
-        if (products.length === 1) {
-            return {
-                intent: INTENT.COMPARE,
-                products: products,
-                message: query,
-            };
-        } else {
-            return {
-                intent: INTENT.OPTIMIZE_CART,
-                products: products,
-                message: query,
-            };
-        }
-    }
-
-    // 7. Unknown
-    return {
-        intent: INTENT.UNKNOWN,
-        products: [],
-        message: query,
-    };
+  return optimizePatterns.some((pattern) => pattern.test(query));
 }
 
 function isShoppingQuery(query) {
-    const shoppingDetect = /\b(buy|need|want|get|find|show|looking for|searching for)\b/i; 
-    return shoppingDetect.test(query);
+  const shoppingDetection =
+    /\b(buy|need|want|get|find|show|looking for|searching for)\b/i;
+
+  return shoppingDetection.test(query);
 }
 
+function detectIntent(query) {
+  if (isGeneralQuery(query)) {
+    return INTENT.GENERAL;
+  }
 
-function extractPriority  (query) { 
-const priorityPatterns = [
+  if (isComparisonQuery(query)) {
+    return INTENT.COMPARE;
+  }
+
+  if (isOptimizationQuery(query)) {
+    return INTENT.OPTIMIZE_CART;
+  }
+
+  if (isShoppingQuery(query)) {
+    return INTENT.SHOPPING_NEED;
+  }
+
+  return INTENT.UNKNOWN;
+}
+
+// ======================================================
+// BUDGET
+// ======================================================
+
+function extractBudget(query) {
+  for (const pattern of BUDGET_PATTERNS) {
+    const match = query.match(pattern);
+
+    if (match) {
+      return Number(match[1]);
+    }
+  }
+
+  return null;
+}
+
+// ======================================================
+// QUANTITY
+// ======================================================
+
+function extractQuantity(query) {
+  const quantityPatterns = [
+    /\b(\d+)\s+(?:pieces?|pcs?|items?|units?)\b/i,
+    /\b(\d+)\s+x\b/i,
+    /\bx\s*(\d+)\b/i,
+  ];
+
+  for (const pattern of quantityPatterns) {
+    const match = query.match(pattern);
+
+    if (match) {
+      return Number(match[1]);
+    }
+  }
+
+  return null;
+}
+
+// ======================================================
+// PRIORITY
+// ======================================================
+
+function extractPriority(query) {
+  const priorityPatterns = [
     {
-      pattern: /\b(cheapest|lowest price|low price|save money)\b/i,
+      pattern: /\b(cheapest|lowest price|low price|save money|best deal)\b/i,
       value: "lowest-price",
     },
     {
@@ -246,22 +155,458 @@ const priorityPatterns = [
       value: "quality",
     },
     {
-      pattern: /\b(fast delivery|quick delivery|earliest delivery|fastest delivery)\b/i,
+      pattern:
+        /\b(fast delivery|quick delivery|earliest delivery|fastest delivery)\b/i,
       value: "delivery",
     },
   ];
 
-
-  for (const {pattern , value} of priorityPatterns) { 
-    if(pattern.test(query)) { 
-        return value ; 
+  for (const { pattern, value } of priorityPatterns) {
+    if (pattern.test(query)) {
+      return value;
     }
   }
-  return null ;
 
-} 
+  return null;
+}
+
+// ======================================================
+// SEARCH QUERY
+// ======================================================
+
+function extractSearchQuery(query) {
+  let searchQuery = query;
+
+  searchQuery = searchQuery.replace(
+    /^(compare|what.*compare|difference between|which is better)\s*/i,
+    ""
+  );
+
+searchQuery = searchQuery.replace(
+  /^(?:i'm|im|i)\s+(?:need|want|would like|am looking for)\s+/i,
+  ""
+);
+
+searchQuery = searchQuery.replace(
+  /^(?:need|want|buy|get|find|show me|looking for|searching for|please)\s+/i,
+  ""
+);
+
+  searchQuery = searchQuery.replace(
+    /(?:under|below|within|upto|up to)\s*₹?\s*\d+(?:\.\d+)?/gi,
+    ""
+  );
+
+  searchQuery = searchQuery.replace(
+    /(?:budget\s*(?:is|of)?|for)\s*₹?\s*\d+(?:\.\d+)?/gi,
+    ""
+  );
+
+  searchQuery = searchQuery.replace(
+    /\b(please|thanks)\b/gi,
+    ""
+  );
+  searchQuery = searchQuery.replace(
+  /^(?:a|an|the)\s+/i,
+  ""
+); 
+
+  searchQuery = searchQuery
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return searchQuery;
+}
+
+// ======================================================
+// CATEGORY
+// ======================================================
+
+function extractCategory(searchQuery) {
+  if (!searchQuery) {
+    return null;
+  }
+
+  return searchQuery.trim().length >= 2
+    ? searchQuery.trim()
+    : null;
+}
+
+// ======================================================
+// PRODUCT EXTRACTION
+// Used mainly for compare / optimize flows
+// ======================================================
+
+function extractProducts(query) {
+  let cleaned = query;
+
+  cleaned = cleaned.replace(
+    /^(compare|what.*compare|difference between|which is better)\s*/i,
+    ""
+  );
+
+  cleaned = cleaned.replace(/\b(vs|versus)\b/gi, ",");
+
+  cleaned = cleaned.replace(
+    /^(i|need|want|buy|get|find|show me|looking for|searching for|please)\s+/i,
+    ""
+  );
+
+  cleaned = cleaned.replace(
+    /(?:under|below|within|upto|up to)\s*₹?\s*\d+(?:\.\d+)?/gi,
+    ""
+  );
+
+  cleaned = cleaned.replace(
+    /(?:budget\s*(?:is|of)?|for)\s*₹?\s*\d+(?:\.\d+)?/gi,
+    ""
+  );
+
+  cleaned = cleaned
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) {
+    return [];
+  }
+
+  return cleaned
+    .split(/,|\band\b/gi)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+// ======================================================
+// CONSTRAINTS
+// ======================================================
+
+function extractConstraints(query) {
+  const constraints = {};
+
+ 
+
+  const colorMatch = query.match(
+    /\b(black|white|blue|red|green|pink|brown|grey|gray|yellow|purple|beige)\b/i
+  );
+
+  if (colorMatch) {
+    constraints.color = colorMatch[1].toLowerCase();
+  }
+
+
+
+  const materialMatch = query.match(
+    /\b(stainless steel|cotton|leather|wooden|plastic|silicone|wool|denim)\b/i
+  );
+
+  if (materialMatch) {
+    constraints.material = materialMatch[1].toLowerCase();
+  }
+
+ 
+
+  const styleMatch = query.match(
+    /\b(formal|casual|sporty|running|office|party|minimal|classic)\b/i
+  );
+
+  if (styleMatch) {
+    constraints.style = styleMatch[1].toLowerCase();
+  }
+
+
+
+  if (/\bwireless\b/i.test(query)) {
+    constraints.wireless = true;
+  }
+
+  if (/\bbluetooth\b/i.test(query)) {
+    constraints.bluetooth = true;
+  }
+
+
+
+  const skinTypeMatch = query.match(
+    /\b(dry skin|oily skin|combination skin|sensitive skin|normal skin)\b/i
+  );
+
+  if (skinTypeMatch) {
+    constraints.skinType = skinTypeMatch[1]
+      .toLowerCase()
+      .replace(" skin", "");
+  }
+
+
+
+  const spfMatch = query.match(/\bspf\s*(\d+)\s*\+?/i);
+
+  if (spfMatch) {
+    constraints.minSpf = Number(spfMatch[1]);
+  }
+
+  // ----------------------------
+  // Use case
+  // Example:
+  // "nuts for evening snacks"
+  // ----------------------------
+
+  const useCaseMatch = query.match(
+    /\bfor\s+(.*?)(?=\s+under\b|\s+below\b|\s+within\b|\s+upto\b|$)/i
+  );
+
+  if (useCaseMatch) {
+    const useCase = useCaseMatch[1].trim();
+
+    if (useCase.length > 2) {
+      constraints.useCase = useCase;
+    }
+  }
+
+  return constraints;
+}
+
+// ======================================================
+// SHOPPING REQUEST PARSER
+// ======================================================
+
+function parseShoppingQuery(query, originalQuery) {
+  const budget = extractBudget(query);
+  const priority = extractPriority(query);
+  const quantity = extractQuantity(query);
+
+  const searchQuery = extractSearchQuery(query);
+  const category = extractCategory(searchQuery);
+  const constraints = extractConstraints(query);
+
+  return {
+    intent: INTENT.SHOPPING_NEED,
+
+    // Preserve exactly what the user asked
+    originalQuery,
+
+    // What should actually be sent to search
+    searchQuery,
+
+    // Kept for backward compatibility with your existing backend
+    category,
+
+    budget,
+    quantity,
+    priority,
+
+    constraints,
+
+    products: [],
+
+    message: originalQuery,
+  };
+}
+
+// ======================================================
+// COMPARISON PARSER
+// ======================================================
+
+function parseComparisonQuery(query, originalQuery) {
+  const products = extractProducts(query);
+
+  if (!products.length) {
+    return {
+      intent: INTENT.GENERAL,
+      products: [],
+      originalQuery,
+      message: originalQuery,
+    };
+  }
+
+  return {
+    intent: INTENT.COMPARE,
+    products,
+    originalQuery,
+    searchQuery: extractSearchQuery(query),
+    constraints: extractConstraints(query),
+    message: originalQuery,
+  };
+}
+
+// ======================================================
+// OPTIMIZATION PARSER
+// ======================================================
+
+function parseOptimizationQuery(query, originalQuery) {
+  const products = extractProducts(query);
+
+  return {
+    intent: INTENT.OPTIMIZE_CART,
+    products,
+    originalQuery,
+    searchQuery: extractSearchQuery(query),
+    constraints: extractConstraints(query),
+    budget: extractBudget(query),
+    priority: extractPriority(query),
+    message: originalQuery,
+  };
+}
+
+// ======================================================
+// MAIN PARSER
+// ======================================================
+
+function parseQuery(message = "") {
+  console.log("📝 Parsing Query:", message);
+
+  const originalQuery = normalizeQuery(message);
+
+  if (!originalQuery) {
+    return {
+      intent: INTENT.UNKNOWN,
+      products: [],
+      originalQuery: "",
+      message: "",
+    };
+  }
+
+  const intent = detectIntent(originalQuery);
+
+  // --------------------------------------------
+  // GENERAL
+  // --------------------------------------------
+
+  if (intent === INTENT.GENERAL) {
+    console.log("✅ GENERAL QUERY DETECTED");
+
+    return {
+      intent: INTENT.GENERAL,
+      products: [],
+      originalQuery,
+      message: originalQuery,
+    };
+  }
+
+  // --------------------------------------------
+  // COMPARE
+  // --------------------------------------------
+
+  if (intent === INTENT.COMPARE) {
+    console.log("✅ COMPARE QUERY DETECTED");
+
+    return parseComparisonQuery(
+      originalQuery,
+      originalQuery
+    );
+  }
+
+  // --------------------------------------------
+  // OPTIMIZE
+  // --------------------------------------------
+
+  if (intent === INTENT.OPTIMIZE_CART) {
+    console.log("✅ OPTIMIZE QUERY DETECTED");
+
+    return parseOptimizationQuery(
+      originalQuery,
+      originalQuery
+    );
+  }
+
+  // --------------------------------------------
+  // SHOPPING NEED
+  // --------------------------------------------
+
+  if (intent === INTENT.SHOPPING_NEED) {
+    console.log("✅ SHOPPING NEED DETECTED");
+
+    return parseShoppingQuery(
+      originalQuery,
+      originalQuery
+    );
+  }
+
+
+
+  const searchQuery = extractSearchQuery(originalQuery);
+
+  if (searchQuery) {
+    console.log("✅ PRODUCT SEARCH FALLBACK");
+
+    return {
+      intent: INTENT.SHOPPING_NEED,
+      products: [],
+      originalQuery,
+      searchQuery,
+      category: extractCategory(searchQuery),
+      budget: extractBudget(originalQuery),
+      quantity: extractQuantity(originalQuery),
+      priority: extractPriority(originalQuery),
+      constraints: extractConstraints(originalQuery),
+      message: originalQuery,
+    };
+  }
+
+  // --------------------------------------------
+  // UNKNOWN
+  // --------------------------------------------
+
+  console.log("❓ UNKNOWN QUERY");
+
+  return {
+    intent: INTENT.UNKNOWN,
+    products: [],
+    originalQuery,
+    message: originalQuery,
+  };
+}
+
+// ======================================================
+// EXPORTS
+// ======================================================
+
+// console.log(
+//   JSON.stringify(
+//     parseQuery("I need a black formal shirt under ₹1500"),
+//     null,
+//     2
+//   )
+// );
+
+// console.log(
+//   JSON.stringify(
+//     parseQuery("I need wireless headphones with good battery under ₹3000"),
+//     null,
+//     2
+//   )
+// );
+
+// console.log(
+//   JSON.stringify(
+//     parseQuery("I need stainless steel utensils for 4 people under ₹1000"),
+//     null,
+//     2
+//   )
+// );
+
+// console.log(
+//   JSON.stringify(
+//     parseQuery("I need almonds for evening snacks under ₹500"),
+//     null,
+//     2
+//   )
+// );
+
+// console.log(
+//   JSON.stringify(
+//     parseQuery("I need sunscreen SPF 60+ for dry skin under ₹500"),
+//     null,
+//     2
+//   )
+// ); 
+
 module.exports = {
-    parseQuery,
-    INTENT,
+  parseQuery,
+  INTENT,
+  extractConstraints,
+  extractBudget,
+  extractPriority,
+  extractProducts,
+  extractSearchQuery,
+  extractCategory,
+  extractQuantity,
 };
-

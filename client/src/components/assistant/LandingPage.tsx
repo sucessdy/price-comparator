@@ -81,8 +81,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </span>
 
           <span className="text-xl font-bold tracking-tight">
-            Smart
-            <span className="text-[#8B83FF]">Cart</span>
+      Smart
+            <span className="text-[#8B83FF]">Cart </span>
           </span>
         </button>
 
@@ -156,19 +156,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <span>Save</span>
         </div>
 
-        <h1 className="text-7xl font-extrabold tracking-tight md:text-7xl lg:text-[76px]">
-          Smart
+        <h1 className="text-7xl font-extrabold  md:text-7xl lg:text-[76px]">
+SAVE TIME   <span> </span>  
           <span className="bg-gradient-to-r from-[#8B83FF] via-[#B779FF] to-[#FF6B9D] bg-clip-text text-transparent">
-            Cart
+  ✦ 
+ SAVE MONEY
           </span>
         </h1>
 
         <div className="mt-5 max-w-3xl text-lg font-light leading-relaxed text-white/55 md:text-xl">
-          Your AI shopping assistant.
+       Your AI shopping assistant for smarter shopping
           <p className="text-white/75">
             {" "}
-            Find the best products, compare prices across platforms, optimize
-            your cart and save more.
+           Compare prices across stores, optimize your cart, and find the best way to save.
           </p>
         </div> 
 

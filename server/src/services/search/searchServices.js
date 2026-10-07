@@ -6,7 +6,8 @@ const {  createOffer } = require("../offer/offerService") ;
 function createCacheKey(query) {
   const normalizedQuery = query.trim().toLowerCase().replace(/\s+/g, "-");
 
-  return `search:${normalizedQuery}`;
+
+  return `search:v2:${normalizedQuery}`;
 }
 
 async function searchProduct(query) {
@@ -15,7 +16,8 @@ async function searchProduct(query) {
 
   if (cachedData) {
     console.log("Redis hit");
-    return JSON.parse(cachedData);
+    
+    return JSON.parse(cachedData).map(createOffer);
   }
 
   console.log("Redis miss");

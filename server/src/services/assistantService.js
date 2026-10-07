@@ -1,35 +1,58 @@
 const { parseQuery, INTENT } = require("../utils/queryParser");
+
 const {
   compareProduct,
   optimizeCart,
   compareProducts,
 } = require("./productService");
+
 const { recommendationService } = require("./recommendationService");
 
 exports.processMessage = async (message) => {
-  const { intent, products, category, budget , priority } = parseQuery(message);
+  const {
+    intent,
+    products,
+    category,
+    searchQuery,
+    budget,
+    priority,
+    quantity,
+    constraints,
+    originalQuery,
+  } = parseQuery(message);
+
   switch (intent) {
+    // =====================================================
+    // COMPARE
+    // =====================================================
+
     case INTENT.COMPARE: {
       if (products.length === 1) {
         const comparison = await compareProduct(products[0]);
+
         return {
           success: true,
           intent,
           type: "comparison",
-          message: `Here are the best price for ${products[0]}.`,
+          message: `Here are the best prices for ${products[0]}.`,
           data: comparison,
         };
       }
 
       if (products.length >= 2) {
         const comparison = await compareProducts(products);
-        console.log("PRODUCTS:", products, Array.isArray(products));
+
+        console.log(
+          "PRODUCTS:",
+          products,
+          Array.isArray(products)
+        );
+
         return {
           success: true,
           intent,
           type: "comparison",
           message: `Here's how ${products.join(" vs ")} compare.`,
-
           data: comparison.details,
         };
       }
@@ -38,26 +61,50 @@ exports.processMessage = async (message) => {
         success: false,
         intent,
         type: "comparison",
-        message: "Please tell me which product(s) you want to compare.",
+        message:
+          "Please tell me which product(s) you want to compare.",
         data: null,
       };
     }
 
+    // =====================================================
+    // OPTIMIZE CART
+    // =====================================================
+
     case INTENT.OPTIMIZE_CART: {
       const optimiseCart = await optimizeCart(products);
+
       return {
         success: true,
         intent,
         type: "shopping-plan",
-        message: "I found the cheapest combination for your Cart.",
+        message: "I found the cheapest combination for your cart.",
         data: optimiseCart,
       };
     }
+
+    // =====================================================
+    // SHOPPING NEED
+    // =====================================================
+
     case INTENT.SHOPPING_NEED: {
-      const recommendations = await recommendationService({
+      console.log("🧠 SHOPPING REQUEST:", {
+        originalQuery,
+        searchQuery,
         category,
         budget,
-        priority 
+        quantity,
+        priority,
+        constraints,
+      });
+
+      const recommendations = await recommendationService({
+        category,
+        searchQuery,
+        budget,
+        quantity,
+        priority,
+        constraints,
       });
 
       return {
@@ -67,11 +114,20 @@ exports.processMessage = async (message) => {
         message: "I found some options for you.",
         data: recommendations,
         context: {
-    category,
-    budget,
-  },
+          originalQuery,
+          searchQuery,
+          category,
+          budget,
+          quantity,
+          priority,
+          constraints,
+        },
       };
     }
+
+    // =====================================================
+    // GENERAL
+    // =====================================================
 
     case INTENT.GENERAL: {
       return {
@@ -84,13 +140,18 @@ exports.processMessage = async (message) => {
       };
     }
 
+    // =====================================================
+    // UNKNOWN
+    // =====================================================
+
     default: {
       return {
         success: false,
         intent: INTENT.UNKNOWN,
         type: "text",
-        message: "Sorry, I couldn't understand your request.",
-        data: null ,
+        message:
+          "Sorry, I couldn't understand your request.",
+        data: null,
       };
     }
   }

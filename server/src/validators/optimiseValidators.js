@@ -5,7 +5,8 @@ const offerSchema = Joi.object({
   id: Joi.string().allow(null).optional(),
   // productKey: Joi.string().trim().min(1).optional(),
   name: Joi.string().trim().min(1).required(),
-  platform: Joi.string().trim().min(1).required(),
+  // Legacy/cached client offers may not carry a platform yet.
+  platform: Joi.string().trim().min(1).empty(null).default("Unknown"),
   price: Joi.number().min(0).required(),
   delivery: Joi.string().allow(null).optional(),
   rating: Joi.number().allow(null).optional(),

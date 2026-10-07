@@ -4,10 +4,7 @@ const calculateFinalCost = require("../utils/calculateFinalCost");
 const { NotFoundError, ValidationError } = require("../errors/AppError");
 const { getMongoOffers, createOffer } = require("./offer/offerService");
 const searchProduct = require("./search/searchServices");
-// const searchShopping = require("./search/serpApiProvider")
-// ======================================================
-// ADD OR UPDATE PRODUCT
-// ======================================================
+
 
 exports.addOrUpdateProduct = async ({ name, price, platform, category }) => {
   const existing = await productRepository.findByNameAndPlatform(
@@ -29,7 +26,7 @@ exports.addOrUpdateProduct = async ({ name, price, platform, category }) => {
     };
   }
 
-  // Create new product
+
   const newProduct = await productRepository.create({
     name,
     price,
@@ -51,7 +48,7 @@ exports.compareProduct = async (productName) => {
 
   const normalizedName = productName.trim().toLowerCase();
 
-  // MongoDB offers
+  
   const mongoProducts = await productRepository.findByName(normalizedName);
 
   const mongoOffers = mongoProducts.map((product) =>
@@ -65,6 +62,8 @@ exports.compareProduct = async (productName) => {
 
   // Live SerpApi offers
   const liveOffers = await searchProduct(normalizedName , true) ;
+  
+console.log("🔎 LIVE OFFER METADATA:", liveOffers[0]);
 
   const allOffers = [...mongoOffers, ...liveOffers];
 
@@ -98,9 +97,11 @@ exports.compareProduct = async (productName) => {
   });
 
 
-  const sortedOffers =[...allOffers].sort(
-    (a, b) => a.price -b.price)
-;
+  const sortedOffers = [...allOffers].sort((a, b) => {
+    if (a.price == null) return 1;
+    if (b.price == null) return -1;
+    return a.price - b.price;
+  });
 
   return {
     product: normalizedName,
@@ -162,9 +163,7 @@ exports.optimizeCart = async (products) => {
 
   const names = normalizedProducts.map((product) => product.name);
 
-  // ------------------------------------------------------
-  // 2. Get offers from both sources
-  // ------------------------------------------------------
+
 
   const mongoOffers = await getMongoOffers(names);
 
@@ -203,9 +202,7 @@ exports.optimizeCart = async (products) => {
     throw new NotFoundError("Products");
   }
 
-  // ======================================================
-  // SPLIT CART STRATEGY
-  // ======================================================
+ 
 
   const splitItems = {};
   const missingProducts = [];
@@ -254,12 +251,7 @@ exports.optimizeCart = async (products) => {
 
   const splitOrderTotals = Object.entries(splitOrdersByPlatform).map(
     ([platform, order]) => {
-      // const calculation = getMongoOffers[platform]
-      //   ? calculateFinalCost(order.productCost, platformConfig[platform])
-      //   : {
-      //       total: order.productCost,
-      //       breakdown: null,
-      //     };
+     
       const config = getPlatformConfig(platform);
 
 const calculation = config
@@ -403,9 +395,6 @@ const calculation = config
     };
   }
 
-  // ======================================================
-  // SAVINGS
-  // ======================================================
 
   let savings = 0;
 
@@ -415,9 +404,6 @@ const calculation = config
     savings = Number(savings.toFixed(2));
   }
 
-  // ======================================================
-  // SHOPPING PLAN
-  // ======================================================
 
   const shoppingPlan = [];
 
@@ -456,9 +442,6 @@ const calculation = config
 
   alternatives.sort((a, b) => a.totalCost - b.totalCost);
 
-  // ======================================================
-  // RETURN
-  // ======================================================
 console.log("🚀 OPTIMIZER RESULT:", {
   recommended,
   savings,

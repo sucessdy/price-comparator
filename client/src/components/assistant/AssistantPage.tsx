@@ -6,18 +6,20 @@ import ShoppingPlanCard from "./cards/ShoppingPlanCard";
 
 const AssistantPage: React.FC = () => {
   const {
-    input,
-    setInput,
-    messages,
-    isLoading,
-    shoppingPlan, 
-    handleOptimizePlan, 
-    handleSendMessage,
-    clearConversation,
-     handleIncreaseQuantity, 
-    handleCompare,
-    handleRemoveFromPlan, 
-    handleAddToPlan,
+     input,
+  setInput,
+  messages,
+  isLoading,
+  isOptimizing,
+  shoppingPlan,
+  handleIncreaseQuantity,
+  handleSendMessage,
+  handleCompare,
+  handleAddToPlan,
+  clearConversation,
+  handleOptimizePlan,
+  handleRemoveFromPlan,
+    
 
   } = useAssistant();
   const hasConversation = messages.length > 0;
@@ -50,7 +52,7 @@ const AssistantPage: React.FC = () => {
 onOptimize= {handleOptimizePlan}
 onRemove={handleRemoveFromPlan}
 onAdd = {handleIncreaseQuantity}
-
+isOptimizing={isOptimizing}
       
     />
             <ChatInput

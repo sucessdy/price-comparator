@@ -1,8 +1,3 @@
-// utils/queryParser.js
-
-// ======================================================
-// INTENTS
-// ======================================================
 
 const INTENT = {
   COMPARE: "COMPARE",
@@ -79,7 +74,12 @@ function isShoppingQuery(query) {
   const shoppingDetection =
     /\b(buy|need|want|get|find|show|looking for|searching for)\b/i;
 
-  return shoppingDetection.test(query);
+  if (shoppingDetection.test(query)) return true;
+
+  // In a shopping assistant, a bare product phrase ("chocolate ice cream")
+  // is also a search request. Leave question-like messages for the general
+  // handler instead of sending them to product search.
+  return !/^(what|why|how|when|where|who|can|could|would|is|are|do|does)\b/i.test(query);
 }
 
 function detectIntent(query) {
@@ -183,12 +183,12 @@ function extractSearchQuery(query) {
   );
 
 searchQuery = searchQuery.replace(
-  /^(?:i'm|im|i)\s+(?:need|want|would like|am looking for)\s+/i,
+  /^(?:i'm|im|i)\s+(?:need|want|would like|am looking for|want to buy|need to buy)\s+/i,
   ""
 );
 
 searchQuery = searchQuery.replace(
-  /^(?:need|want|buy|get|find|show me|looking for|searching for|please)\s+/i,
+  /^(?:(?:to\s+)?buy|need|want|get|find|show me|looking for|searching for|please)\s+/i,
   ""
 );
 

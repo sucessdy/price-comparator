@@ -7,6 +7,212 @@ const {
 } = require("../errors/AppError");
 const { createOffer } = require("./offer/offerService");
 
+const QUERY_STOP_WORDS = new Set([
+  "a", "an", "the", "i", "me", "my", "to", "for", "of", "and",
+  "want", "need", "buy", "get", "find", "show", "please", "looking",
+  "searching", "gm", "g", "kg", "ml", "l",
+]);
+
+function editDistanceAtMostOne(left, right) {
+  if (left === right) return true;
+  if (Math.abs(left.length - right.length) > 1) return false;
+
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < left.length && j < right.length) {
+    if (left[i] === right[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    edits += 1;
+    if (edits > 1) return false;
+    if (left.length > right.length) i += 1;
+    else if (right.length > left.length) j += 1;
+    else {
+      i += 1;
+      j += 1;
+    }
+  }
+  if (i < left.length || j < right.length) edits += 1;
+  return edits <= 1;
+}
+
+function queryTerms(query) {
+  const normalized = query.toLowerCase()
+    .replace(/\b\d+(?:\.\d+)?\s*(?:grams?|gm|g|kilograms?|kg|ml|milliliters?|liters?|l)\b/gi, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  return [...new Set(normalized.split(/\s+/).filter((term) =>
+    term.length > 1 && !QUERY_STOP_WORDS.has(term) && !/^\d+$/.test(term)
+  ))];
+}
+
+function matchQuery(productName, query) {
+  const terms = queryTerms(query);
+  const normalizedProductName = productName.toLowerCase();
+  const productTerms = normalizedProductName
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  const matched = terms.filter((term) => {
+    // Common catalog spelling variants should count as a match.
+    const variants = {
+      chocolate: ["chocochip", "chocochips"],
+      whipped: ["whip", "whipping"],
+      cream: ["topping", "toppings"],
+    }[term] ?? [];
+    return productTerms.some((candidate) =>
+      candidate === term || variants.includes(candidate) ||
+      (term.length >= 4 && candidate.length >= 4 && editDistanceAtMostOne(term, candidate))
+    );
+  });
+
+  // Keep a candidate only when every specific search word is represented.
+  // Short generic words such as "ice" are useful for ranking, but are not
+  // always present in catalog titles (for example, "Cornetto").
+  const requiredTerms = terms.filter((term) => term.length >= 4);
+  const isRelevant = requiredTerms.length
+    ? requiredTerms.every((term) => matched.includes(term))
+    : matched.length > 0;
+
+  // "Whipped cream" is an edible grocery item in this assistant. Shopping
+  // catalogs also use that phrase in skincare names and dispenser parts, so
+  // matching the words alone is not enough to establish product relevance.
+  const isWhippedCreamSearch = /\bwhipped\s+cream\b/i.test(query);
+  const nonFoodWhippedCreamResult = isWhippedCreamSearch &&
+    /\b(moisturi[sz](?:er|ers|ing|ation)|skin|face|facial|lotion|beauty|rejuvenation|gasket|dispenser|spare\s+parts?|accessor(?:y|ies)|drunk\s+elephant)\b/i.test(normalizedProductName);
+
+  return {
+    isRelevant: isRelevant && !nonFoodWhippedCreamResult,
+    coverage: terms.length ? matched.length / terms.length : 0,
+  };
+}
+
+
+// =====================================================
+// PRODUCT IDENTITY
+// =====================================================
+
+
+exports.recommendationService = async ({ }) => {
+   
+const PRODUCT_TYPE_RULES = [
+  {
+    type: "sanitary_pad",
+    keywords: [
+      "sanitary pad",
+      "period pad",
+      "menstrual pad",
+      "pads for periods",
+    ],
+  },
+
+  {
+    type: "ice_cream",
+    keywords: [
+      "ice cream",
+      "icecream",
+      "ice-cream",
+    ],
+  },
+
+  {
+    type: "shampoo",
+    keywords: [
+      "shampoo",
+    ],
+  },
+
+  {
+    type: "smartphone",
+    keywords: [
+      "smartphone",
+      "smart phone",
+      "mobile phone",
+      "touchscreen phone",
+      "touch screen phone",
+      "touch phone",
+    ],
+  },
+
+  {
+    type: "running_shoes",
+    keywords: [
+      "running shoes",
+      "running shoe",
+    ],
+  },
+
+  {
+    type: "headphones",
+    keywords: [
+      "headphones",
+      "headphone",
+    ],
+  },
+
+  {
+    type: "shirt",
+    keywords: [
+      "shirt",
+      "formal shirt",
+      "casual shirt",
+    ],
+  },
+];
+
+function identifyProductType(query) {
+  const normalizedQuery = query
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Check specific phrases first
+  for (const rule of PRODUCT_TYPE_RULES) {
+    const matchedKeyword = rule.keywords.find((keyword) => {
+      const pattern = new RegExp(
+        `\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+        "i"
+      );
+
+      return pattern.test(normalizedQuery);
+    });
+
+    if (matchedKeyword) {
+      return {
+        type: rule.type,
+        matchedKeyword,
+        ambiguous: false,
+      };
+    }
+  }
+
+  // "pad" alone is ambiguous
+  if (/\bpad\b/i.test(normalizedQuery)) {
+    return {
+      type: null,
+      matchedKeyword: "pad",
+      ambiguous: true,
+      candidates: [
+        "sanitary pad",
+        "tablet / iPad",
+        "mouse pad",
+        "drawing pad",
+      ],
+    };
+  }
+
+  return {
+    type: null,
+    matchedKeyword: null,
+    ambiguous: false,
+  };
+}
+}
+ 
 exports.recommendationService = async ({
   category,
   searchQuery,
@@ -20,16 +226,26 @@ exports.recommendationService = async ({
   // =====================================================
 
   const query = searchQuery?.trim() || category?.trim();
-
-  if (!query) {
+    if (!query) {
     throw new ValidationError("Shopping request is required");
   }
+const productIdentity = identifyProductType(query);
+
+console.log(
+  "🧠 PRODUCT IDENTITY:",
+  JSON.stringify(productIdentity, null, 2)
+);
+
+
 
   // =====================================================
   // 2. Search using the user's full shopping context
   // =====================================================
 console.log("🔎 FINAL SHOPPING QUERY:", query);
-  const products = await searchProducts(query);
+  const providerQuery = /\bwhipped\s+cream\b/i.test(query)
+    ? `${query} food topping dairy`
+    : query;
+  const products = await searchProducts(providerQuery);
 
   if (!products.length) {
     throw new NotFoundError(
@@ -153,12 +369,14 @@ console.log("🔎 FINAL SHOPPING QUERY:", query);
   // 5. Add relevance score
   // =====================================================
 
-  const scoredProducts = filteredProducts.map(
-    (product) => ({
+  const scoredProducts = filteredProducts.map((product) => {
+    const queryMatch = matchQuery(product.name ?? "", query);
+    return {
       ...product,
-      relevanceScore: scoreProduct(product),
-    })
-  );
+      ...queryMatch,
+      relevanceScore: scoreProduct(product) + queryMatch.coverage * 100,
+    };
+  }).filter((product) => product.isRelevant);
 
   // =====================================================
   // 6. Remove duplicate product + platform combinations
@@ -247,6 +465,9 @@ return  a.price - b.price
   // relevance first, price second
   if (!priority) {
     uniqueProducts.sort((a, b) => {
+      if (b.coverage !== a.coverage) {
+        return b.coverage - a.coverage;
+      }
       if (b.relevanceScore !== a.relevanceScore) {
         return b.relevanceScore - a.relevanceScore;
       }

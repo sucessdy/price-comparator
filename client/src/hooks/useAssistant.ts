@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect  , useRef} from "react";
 import { useUser } from "../context/useUser";
 import { sendAssistantMessage } from "../services/assistant.service";
 import { compareProduct, optimizeCart } from "../api/productApi";
@@ -29,6 +29,7 @@ const loadSavedMessages = (): Message[] => {
 };
 
 export function useAssistant() {
+  const isSendingRef = useRef(false); 
   const { user, updateUser } = useUser();
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>(loadSavedMessages);
@@ -113,7 +114,10 @@ const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
 }, [shoppingPlan]);
 
   const handleSendMessage = async (text: string): Promise<void> => {
-    if (!text.trim() || isLoading) return;
+    if (!text.trim() || isSendingRef.current) return;
+
+  isSendingRef.current = true;
+  setIsLoading(true);
 
     const userMessage: Message = {
       id: Date.now(),
@@ -125,7 +129,6 @@ const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    setIsLoading(true);
 
     try {
       const response = await sendAssistantMessage(text);
@@ -168,7 +171,8 @@ const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
         return [...updated, errorMessage];
       });
     } finally {
-      setIsLoading(false);
+       isSendingRef.current = false;
+    setIsLoading(false);
     }
   };
 

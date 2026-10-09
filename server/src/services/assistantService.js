@@ -1,5 +1,5 @@
 const { parseQuery, INTENT } = require("../utils/queryParser");
-
+const { planShoppingQuery } = require("./query/queryPlanner");
 const {
   compareProduct,
   optimizeCart,
@@ -87,43 +87,140 @@ exports.processMessage = async (message) => {
     // SHOPPING NEED
     // =====================================================
 
+    // case INTENT.SHOPPING_NEED: {
+    //   console.log("🧠 SHOPPING REQUEST:", {
+    //     originalQuery,
+    //     searchQuery,
+    //     category,
+    //     budget,
+    //     quantity,
+    //     priority,
+    //     constraints,
+    //   });
+
+    //   const recommendations = await recommendationService({
+    //     category,
+    //     searchQuery,
+    //     budget,
+    //     quantity,
+    //     priority,
+    //     constraints,
+    //   });
+
+    //   return {
+    //     success: true,
+    //     intent,
+    //     type: "recommendation",
+    //     message: "I found some options for you.",
+    //     data: recommendations,
+    //     context: {
+    //       originalQuery,
+    //       searchQuery,
+    //       category,
+    //       budget,
+    //       quantity,
+    //       priority,
+    //       constraints,
+    //     },
+    //   };
+    // }
+
     case INTENT.SHOPPING_NEED: {
-      console.log("🧠 SHOPPING REQUEST:", {
-        originalQuery,
-        searchQuery,
-        category,
-        budget,
-        quantity,
-        priority,
-        constraints,
-      });
+  // Start with the existing parser's values.
+  // These remain our fallback if Gemini fails.
+  let finalSearchQuery = searchQuery;
+  let finalBudget = budget;
+  let finalQuantity = quantity;
+  let finalPriority = priority;
+  let queryPlan = null;
 
-      const recommendations = await recommendationService({
-        category,
-        searchQuery,
-        budget,
-        quantity,
-        priority,
-        constraints,
-      });
+  try {
+    queryPlan = await planShoppingQuery(message);
 
+    console.log("🧠 GEMINI QUERY PLAN:", queryPlan);
+
+    // Ask the user only when the product itself is ambiguous.
+    if (queryPlan.needsClarification) {
       return {
         success: true,
         intent,
-        type: "recommendation",
-        message: "I found some options for you.",
-        data: recommendations,
+        type: "text",
+        message:
+          queryPlan.clarificationQuestion ||
+          "Could you clarify which product you're looking for?",
+        data: null,
         context: {
-          originalQuery,
-          searchQuery,
-          category,
-          budget,
-          quantity,
-          priority,
-          constraints,
+          originalQuery: originalQuery || message,
         },
       };
     }
+
+    // Use the planner's improved search query.
+    if (queryPlan.searchQuery?.trim()) {
+      finalSearchQuery = queryPlan.searchQuery.trim();
+    }
+
+    // Preserve existing parser values if Gemini omits a value.
+    if (queryPlan.budget != null) {
+      finalBudget = queryPlan.budget;
+    }
+
+    if (queryPlan.quantity != null) {
+      finalQuantity = queryPlan.quantity;
+    }
+
+    // Keep an existing explicit priority if Gemini returns
+    // the default "relevance" priority.
+    if (
+      queryPlan.priority &&
+      queryPlan.priority !== "relevance"
+    ) {
+      finalPriority = queryPlan.priority;
+    }
+  } catch (error) {
+    console.error(
+      "⚠️ Query planner failed; using existing parser:",
+      error.response?.data || error.message
+    );
+  }
+
+  console.log("🛍️ SHOPPING REQUEST:", {
+    originalQuery,
+    searchQuery: finalSearchQuery,
+    category,
+    budget: finalBudget,
+    quantity: finalQuantity,
+    priority: finalPriority,
+    constraints,
+  });
+
+  const recommendations = await recommendationService({
+    category,
+    searchQuery: finalSearchQuery,
+    budget: finalBudget,
+    quantity: finalQuantity,
+    priority: finalPriority,
+    constraints,
+  });
+
+  return {
+    success: true,
+    intent,
+    type: "recommendation",
+    message: "I found some options for you.",
+    data: recommendations,
+    context: {
+      originalQuery: originalQuery || message,
+      searchQuery: finalSearchQuery,
+      category,
+      budget: finalBudget,
+      quantity: finalQuantity,
+      priority: finalPriority,
+      constraints,
+      queryPlan,
+    },
+  };
+} 
 
     // =====================================================
     // GENERAL

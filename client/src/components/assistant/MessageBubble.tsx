@@ -26,35 +26,44 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onCompare,
   onAddToPlan
 }) => {
-  const isUser = message.sender === "user";
-  const hasComparisonCard =
-    !isUser &&
-    message.type === MESSAGE_TYPES.COMPARISON &&
-    message.data !== undefined;
+ 
+const isUser = message.sender === "user";
 
-    const hasMultipleComparisonCard =
+const hasComparisonCard =
+  !isUser &&
+  message.type === MESSAGE_TYPES.COMPARISON &&
+  message.data != null;
+
+const hasMultipleComparisonCard =
   hasComparisonCard &&
   Array.isArray(message.data);
 
-  const hasSingleComparisonCard =
-  hasComparisonCard && !Array.isArray(message.data);
-  
-  const hasCartCard =
-    !isUser &&
-    message.type === MESSAGE_TYPES.SHOPPING_PLAN &&
-    message.data !== undefined;
+const hasSingleComparisonCard =
+  hasComparisonCard &&
+  !Array.isArray(message.data);
 
-  const hasRecommendationCard =
-    !isUser &&
-    message.type === MESSAGE_TYPES.RECOMMENDATION &&
-    message.data !== undefined;
+const hasCartCard =
+  !isUser &&
+  message.type === MESSAGE_TYPES.SHOPPING_PLAN &&
+  message.data != null;
 
-  const hasRichCard =  hasSingleComparisonCard || hasCartCard || hasRecommendationCard || 
-  hasMultipleComparisonCard ; 
- 
+const recommendations: Recommendation[] = Array.isArray(message.data)
+  ? (message.data as Recommendation[])
+  : [];
+
+const hasRecommendationCard =
+  !isUser &&
+  message.type === MESSAGE_TYPES.RECOMMENDATION &&
+  recommendations.length > 0;
+
+const hasRichCard =
+  hasSingleComparisonCard ||
+  hasCartCard ||
+  hasRecommendationCard ||
+  hasMultipleComparisonCard;
 
 
-  const recommendations = message.data as Recommendation[];
+
   return (
     <div
       className={`flex ${isUser ? "justify-end" : "justify-start"} animate-fadeIn`}
@@ -84,12 +93,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
 
-
-{/* 
-          {hasComparisonCard && (
-            <CompareCard comparison={message.data as ProductComparison} />
-          )} */}
-
           {hasCartCard && (
             <CartCard result={message.data as OptimizeCartResponse} />
           )}
@@ -107,9 +110,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 )}
 
           {hasRecommendationCard &&
-            recommendations.map((recommendation) => (
+            recommendations.map((recommendation, index) => (
               <RecommendationCard
-                key={recommendation.id ?? `${recommendation.name}-${recommendation.platform}`}
+                key={recommendation.id ?? `${recommendation.name}-${recommendation.platform } - ${index}`}
                 recommendation={recommendation}
                 onCompare={onCompare}
                 onAddToPlan={onAddToPlan}

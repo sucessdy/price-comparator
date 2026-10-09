@@ -96,7 +96,6 @@ function matchQuery(productName, query) {
 // =====================================================
 
 
-exports.recommendationService = async ({ }) => {
    
 const PRODUCT_TYPE_RULES = [
   {
@@ -211,7 +210,7 @@ function identifyProductType(query) {
     ambiguous: false,
   };
 }
-}
+
  
 exports.recommendationService = async ({
   category,
@@ -369,14 +368,52 @@ console.log("🔎 FINAL SHOPPING QUERY:", query);
   // 5. Add relevance score
   // =====================================================
 
-  const scoredProducts = filteredProducts.map((product) => {
-    const queryMatch = matchQuery(product.name ?? "", query);
-    return {
-      ...product,
-      ...queryMatch,
-      relevanceScore: scoreProduct(product) + queryMatch.coverage * 100,
-    };
-  }).filter((product) => product.isRelevant);
+const scoredCandidates = filteredProducts.map((product) => {
+  const queryMatch = matchQuery(product.name ?? "", query);
+
+  return {
+    ...product,
+    ...queryMatch,
+    relevanceScore:
+      scoreProduct(product) + queryMatch.coverage * 100,
+  };
+});
+
+const strictMatches = scoredCandidates.filter(
+  (product) => product.isRelevant
+);
+
+console.log("🔬 RECOMMENDATION DEBUG:", {
+  query,
+  serpApiResults: products.length,
+  withinBudget: filteredProducts.length,
+  strictMatches: strictMatches.length,
+  candidates: scoredCandidates.slice(0, 8).map((product) => ({
+    name: product.name,
+    price: product.price,
+    coverage: product.coverage,
+    isRelevant: product.isRelevant,
+  })),
+});
+
+let scoredProducts = strictMatches;
+
+if (scoredProducts.length === 0) {
+  console.warn(
+    `⚠️ No strict matches for "${query}". Trying partial matches.`
+  );
+
+  scoredProducts = scoredCandidates
+    .filter((product) => product.coverage >= 0.5)
+    .sort(
+      (a, b) =>
+        b.coverage - a.coverage ||
+        b.relevanceScore - a.relevanceScore
+    );
+}
+
+console.log("✅ Final matched products:", scoredProducts.length);
+
 
   // =====================================================
   // 6. Remove duplicate product + platform combinations
@@ -387,14 +424,31 @@ console.log("🔎 FINAL SHOPPING QUERY:", query);
 
   for (const product of scoredProducts) {
     
+// const key =
+//   product.shoppingProductId ||
+//   product.image ||
+//   `${product.name.trim().toLowerCase()}-${(
+//     product.platform || ""
+//   ).trim().toLowerCase()}`;
+
+
+const normalizedName = (product.name || "")
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, " ")
+  .trim();
+
+const normalizedPlatform = (product.platform || "")
+  .toLowerCase()
+  .trim();
+
 const key =
-  product.shoppingProductId ||
-  product.image ||
-  `${product.name.trim().toLowerCase()}-${(
-    product.platform || ""
-  ).trim().toLowerCase()}`;
+  normalizedName && normalizedPlatform
+    ? `${normalizedName}::${normalizedPlatform}`
+    : product.shoppingProductId ||
+      product.image ||
+      normalizedName;
 
-
+      
     if (seen.has(key)) {
       continue;
     }

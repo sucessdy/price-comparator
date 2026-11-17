@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      # Docker login
+      # Login to Docker Hub
       - name: Docker Login
         uses: docker/login-action@v4
         with:
@@ -22,15 +22,23 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Setup Docker Buildx
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Build and push image
-      - name: Build and push
+      # Build and push frontend
+      - name: Build and Push Client
         uses: docker/build-push-action@v7
         with:
-          context: .
+          context: ./client
+          file: ./client/Dockerfile
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/price-comparator:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/price-comparator-client:latest
+
+      # Build and push backend
+      - name: Build and Push Server
+        uses: docker/build-push-action@v7
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: true
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/price-comparator-server:latest
